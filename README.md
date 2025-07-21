@@ -14,11 +14,15 @@ The script requires the following software to be installed on the host OS:
 
 If you are running on macOS or Linux, you mainly need to ensure FFmpeg (which includes ffprobe) is installed. The script provides installation hints for FFmpeg for macOS (brew install ffmpeg), Ubuntu/Debian (sudo apt install ffmpeg), and CentOS/RHEL (sudo yum install ffmpeg).
 
+# Setup
+
+Make sure `generate.sh` is executable, run `chmod +x generate.sh`.
+
 # How to use?
 
-Run the following command in the repo directory:
+Run the following command in the terminal, from the repo directory:
 
-./generate.sh
+`generate.sh`
 
 Follow the prompts to customise your workout.
 
