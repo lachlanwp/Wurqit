@@ -2,6 +2,8 @@
 
 Generates a workout based on your inputs
 
+![Demo](output.gif)
+
 # Requirements
 
 Must be on a \*nix
