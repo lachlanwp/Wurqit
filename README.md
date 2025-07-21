@@ -1,4 +1,4 @@
-# Workout-Generator
+# 💪 Workout Generator 🏋️
 
 Generates a workout based on your inputs
 
@@ -29,6 +29,10 @@ Run the following command in the terminal, from the repo directory:
 Follow the prompts to customise your workout.
 
 Once done, a new MP4 video will be saved for you.
+
+# Further enhancements
+
+Body group & equipment selections 🚀
 
 # Excercise data source?
 
