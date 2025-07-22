@@ -83,15 +83,15 @@ format_exercise_name() {
 
 # Function to get exercise videos
 get_exercise_videos() {
-    local videos_dir="downloads"
+    local videos_dir="videos"
     local videos=()
     
     if [[ ! -d "$videos_dir" ]]; then
-        print_error "Downloads directory not found: $videos_dir"
+        print_error "Videos directory not found: $videos_dir"
         exit 1
     fi
     
-    # Get all video files from downloads directory
+    # Get all video files from videos directory
     while IFS= read -r -d '' file; do
         videos+=("$file")
     done < <(find "$videos_dir" -name "*.mp4" -print0)
