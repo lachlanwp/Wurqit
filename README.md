@@ -6,13 +6,13 @@ Generates a workout based on your inputs
 
 # Options available
 
-1. Work time
-2. Rest time
-3. Time between stations
-4. Number of sets per station
-5. Total workout time
-6. Type of workout
-7. Equipment
+1. Work time (e.g. 45 seconds work)
+2. Rest time (e.g. 15 seconds work)
+3. Time between stations (e.g. 15 seconds to get ready)
+4. Number of sets per station (e.g. 3 sets)
+5. Total workout time (e.g. 60 minutes)
+6. Type of workout (e.g. strength,cardio)
+7. Equipment (e.g. kettlebell,dumbell,bands)
 
 # Requirements
 
@@ -29,9 +29,10 @@ If you are running on macOS or Linux, you mainly need to ensure FFmpeg (which in
 # Setup
 
 Install FFmpeg if you don't already have it
-macOS: `brew install ffmpeg`
-Ubuntu/Debian: `sudo apt install ffmpeg`
-CentOS/RHEL: `sudo yum install ffmpeg`
+
+- macOS: `brew install ffmpeg`
+- Ubuntu/Debian: `sudo apt install ffmpeg`
+- CentOS/RHEL: `sudo yum install ffmpeg`
 
 Make sure `generate.sh` is executable, run `chmod +x generate.sh`.
 
