@@ -496,7 +496,10 @@ main() {
     
     # Get categories
     print_status "Loading available categories..."
-    mapfile -t all_categories < <(get_categories)
+    all_categories=()
+    while IFS= read -r line; do
+        all_categories+=("$line")
+    done < <(get_categories)
     if [ ${#all_categories[@]} -eq 0 ]; then
         print_error "No categories found in videos directory."
         exit 1
@@ -520,7 +523,10 @@ main() {
     fi
     # Get equipment
     print_status "Loading available equipment for selected categories..."
-    mapfile -t all_equipment < <(get_equipment "${selected_categories[@]}")
+    all_equipment=()
+    while IFS= read -r line; do
+        all_equipment+=("$line")
+    done < <(get_equipment "${selected_categories[@]}")
     if [ ${#all_equipment[@]} -eq 0 ]; then
         print_error "No equipment found for selected categories."
         exit 1
