@@ -30,10 +30,6 @@ Follow the prompts to customise your workout.
 
 Once done, a new MP4 video will be saved for you.
 
-# Further enhancements
-
-Body group & equipment selections 🚀
-
 # Excercise data source?
 
 https://github.com/yuhonas/free-exercise-db
