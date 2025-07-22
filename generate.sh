@@ -100,15 +100,15 @@ get_equipment() {
     local videos_dir="videos"
     local categories=("$@")
     local equipment_set=()
-    local equipment_seen=()
+    local equipment_seen=""
     for category in "${categories[@]}"; do
         local category_dir="$videos_dir/$category"
         if [[ -d "$category_dir" ]]; then
             while IFS= read -r -d '' dir; do
                 local equip_name="$(basename "$dir")"
-                if [[ -z "${equipment_seen[$equip_name]}" ]]; then
+                if [[ ! "$equipment_seen" =~ (^|:)"$equip_name"(:|$) ]]; then
                     equipment_set+=("$equip_name")
-                    equipment_seen[$equip_name]=1
+                    equipment_seen="${equipment_seen}:$equip_name:"
                 fi
             done < <(find "$category_dir" -mindepth 1 -maxdepth 1 -type d -print0)
         fi
