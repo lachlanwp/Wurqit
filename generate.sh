@@ -81,27 +81,65 @@ format_exercise_name() {
     echo "$basename" | sed 's/-/ /g' | awk '{print toupper(substr($0,1,1)) substr($0,2)}'
 }
 
-# Function to get exercise videos
-get_exercise_videos() {
+# Function to get all category names (subfolders in videos/)
+get_categories() {
     local videos_dir="videos"
-    local videos=()
-    
+    local categories=()
     if [[ ! -d "$videos_dir" ]]; then
         print_error "Videos directory not found: $videos_dir"
         exit 1
     fi
-    
-    # Get all video files from videos directory
-    while IFS= read -r -d '' file; do
-        videos+=("$file")
-    done < <(find "$videos_dir" -name "*.mp4" -print0)
-    
+    while IFS= read -r -d '' dir; do
+        categories+=("$(basename "$dir")")
+    done < <(find "$videos_dir" -mindepth 1 -maxdepth 1 -type d -print0)
+    printf '%s\n' "${categories[@]}"
+}
+
+# Function to get all equipment names for given categories
+get_equipment() {
+    local videos_dir="videos"
+    local categories=("$@")
+    local equipment_set=()
+    local equipment_seen=()
+    for category in "${categories[@]}"; do
+        local category_dir="$videos_dir/$category"
+        if [[ -d "$category_dir" ]]; then
+            while IFS= read -r -d '' dir; do
+                local equip_name="$(basename "$dir")"
+                if [[ -z "${equipment_seen[$equip_name]}" ]]; then
+                    equipment_set+=("$equip_name")
+                    equipment_seen[$equip_name]=1
+                fi
+            done < <(find "$category_dir" -mindepth 1 -maxdepth 1 -type d -print0)
+        fi
+    done
+    printf '%s\n' "${equipment_set[@]}"
+}
+
+# Function to get exercise videos filtered by selected categories and equipment
+get_exercise_videos_filtered() {
+    local videos_dir="videos"
+    local -a categories=()
+    local -a equipment=()
+    local -a videos=()
+    # Read categories and equipment from arguments
+    while [[ "$1" != "--" ]]; do categories+=("$1"); shift; done
+    shift # skip --
+    while [[ $# -gt 0 ]]; do equipment+=("$1"); shift; done
+    for category in "${categories[@]}"; do
+        for equip in "${equipment[@]}"; do
+            local equip_dir="$videos_dir/$category/$equip"
+            if [[ -d "$equip_dir" ]]; then
+                while IFS= read -r -d '' file; do
+                    videos+=("$file")
+                done < <(find "$equip_dir" -name "*.mp4" -print0)
+            fi
+        done
+    done
     if [ ${#videos[@]} -eq 0 ]; then
-        print_error "No exercise videos found in $videos_dir"
+        print_error "No exercise videos found for selected categories and equipment."
         exit 1
     fi
-    
-    # Only print filenames, not status messages
     printf '%s\n' "${videos[@]}"
 }
 
@@ -456,12 +494,61 @@ main() {
     echo "  Total workout duration: ${total_workout_duration} minutes"
     echo
     
-    # Get exercise videos
+    # Get categories
+    print_status "Loading available categories..."
+    mapfile -t all_categories < <(get_categories)
+    if [ ${#all_categories[@]} -eq 0 ]; then
+        print_error "No categories found in videos directory."
+        exit 1
+    fi
+    echo "Available categories:"
+    for i in "${!all_categories[@]}"; do
+        echo "  $((i+1)). ${all_categories[$i]}"
+    done
+    category_input=$(get_user_input "Enter comma-separated numbers for categories to include (e.g. 1,3,5): " "1")
+    IFS=',' read -ra selected_category_indices <<< "$category_input"
+    selected_categories=()
+    for idx in "${selected_category_indices[@]}"; do
+        idx_trim=$(echo "$idx" | xargs)
+        if [[ "$idx_trim" =~ ^[0-9]+$ ]] && [ "$idx_trim" -ge 1 ] && [ "$idx_trim" -le ${#all_categories[@]} ]; then
+            selected_categories+=("${all_categories[$((idx_trim-1))]}")
+        fi
+    done
+    if [ ${#selected_categories[@]} -eq 0 ]; then
+        print_error "No valid categories selected."
+        exit 1
+    fi
+    # Get equipment
+    print_status "Loading available equipment for selected categories..."
+    mapfile -t all_equipment < <(get_equipment "${selected_categories[@]}")
+    if [ ${#all_equipment[@]} -eq 0 ]; then
+        print_error "No equipment found for selected categories."
+        exit 1
+    fi
+    echo "Available equipment:"
+    for i in "${!all_equipment[@]}"; do
+        echo "  $((i+1)). ${all_equipment[$i]}"
+    done
+    equipment_input=$(get_user_input "Enter comma-separated numbers for equipment you have (e.g. 1,2,4): " "1")
+    IFS=',' read -ra selected_equipment_indices <<< "$equipment_input"
+    selected_equipment=()
+    for idx in "${selected_equipment_indices[@]}"; do
+        idx_trim=$(echo "$idx" | xargs)
+        if [[ "$idx_trim" =~ ^[0-9]+$ ]] && [ "$idx_trim" -ge 1 ] && [ "$idx_trim" -le ${#all_equipment[@]} ]; then
+            selected_equipment+=("${all_equipment[$((idx_trim-1))]}")
+        fi
+    done
+    if [ ${#selected_equipment[@]} -eq 0 ]; then
+        print_error "No valid equipment selected."
+        exit 1
+    fi
+    
+    # Get exercise videos filtered by category and equipment
     print_status "Loading exercise videos..."
     exercise_videos=()
     while IFS= read -r line; do
       exercise_videos+=("$line")
-    done < <(get_exercise_videos)
+    done < <(get_exercise_videos_filtered "${selected_categories[@]}" -- "${selected_equipment[@]}")
     
     if [ ${#exercise_videos[@]} -eq 0 ]; then
         print_error "No exercise videos found!"
