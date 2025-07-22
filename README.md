@@ -2,7 +2,9 @@
 
 Generates a workout based on your inputs
 
-![Demo](output.gif)
+![Run](run.png)
+
+![Demo](demo.gif)
 
 # Options available
 
