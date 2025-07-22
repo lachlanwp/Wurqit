@@ -7,7 +7,7 @@ Generates a workout based on your inputs
 # Options available
 
 1. Work time (e.g. 45 seconds work)
-2. Rest time (e.g. 15 seconds work)
+2. Rest time (e.g. 15 seconds rest)
 3. Time between stations (e.g. 15 seconds to get ready)
 4. Number of sets per station (e.g. 3 sets)
 5. Total workout time (e.g. 60 minutes)
