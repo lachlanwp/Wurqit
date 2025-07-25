@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Electron FFmpeg</title>
+</head>
+<body>
+  <h1>FFmpeg in Electron</h1>
+  <button id="runBtn">Run FFmpeg</button>
+  <pre id="output"></pre>
+
+  <script>
+    document.getElementById('runBtn').addEventListener('click', async () => {
+      const output = await window.ffmpeg.run();
+      document.getElementById('output').textContent = output;
+    });
+  </script>
+</body>
+</html>
