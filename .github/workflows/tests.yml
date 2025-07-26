@@ -29,9 +29,26 @@ jobs:
     - name: Run tests with coverage
       run: npm test -- --coverage
     
-    - name: Upload coverage reports
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage-report-${{ matrix.node-version }}
-        path: coverage/
-        retention-days: 30 
+    - name: Extract coverage percent
+        run: |
+          node <<'EOF'
+          const fs = require('fs');
+          const summary = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf-8'));
+          const pct = summary.total.statements.pct;
+          const badge = {
+            schemaVersion: 1,
+            label: "coverage",
+            message: `${pct}%`,
+            color: pct > 90 ? "brightgreen" : pct > 75 ? "yellow" : "red"
+          };
+          fs.mkdirSync('.badge', { recursive: true });
+          fs.writeFileSync('.badge/coverage.json', JSON.stringify(badge));
+          EOF
+
+      - name: Upload badge to `gh-pages`
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: .badge
+          destination_dir: badges  # /badges/coverage.json

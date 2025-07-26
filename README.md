@@ -2,7 +2,8 @@
 
 
 ![Tests](https://github.com/lachlanwp/wurqit/actions/workflows/tests.yml/badge.svg)
-[![codecov](https://codecov.io/gh/lachlanwp/wurqit/branch/main/graph/badge.svg)](https://codecov.io/gh/lachlanwp/wurqit)
+[![Coverage](https://img.shields.io/endpoint?url=https://lachlanwp.github.io/wurqit/badges/coverage.json)](https://github.com/lachlanwp/wurqit/actions/workflows/test-simple.yml)
+
 
 <div align="center">
     <img src="promo.png" alt="Description" style="max-width:100%; height:auto;" /> 
