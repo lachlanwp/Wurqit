@@ -1,5 +1,5 @@
 {
-  "name": "workout-app",
+  "name": "wurqit",
   "version": "1.0.0",
   "main": "main.js",
   "scripts": {
@@ -17,11 +17,13 @@
     "electron-is-dev": "^1.2.0"
   },
   "build": {
-    "appId": "com.lachlanpearce.workout",
-    "productName": "Workout Generator",
+    "appId": "com.lachlanpearce.wurqit",
+    "productName": "Wurqit",
     "files": [
       "**/*",
-      "!media/**/*"
+      "!media/**/*",
+      "media/images/**/*",
+      "media/icon/**/*"
     ],
     "asarUnpack": [
       "node_modules/ffmpeg-static/**"

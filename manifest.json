@@ -1,6 +1,6 @@
 {
-  "name": "Workout Video Generator",
-  "short_name": "WorkoutGen",
+  "name": "Wurqit",
+  "short_name": "Wurqit",
   "description": "Generate custom workout videos with exercise categories and equipment options.",
   "start_url": ".",
   "display": "standalone",

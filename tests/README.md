@@ -1,6 +1,6 @@
 # Test Suite
 
-This directory contains all the test files for the Workout Video Generator application.
+This directory contains all the test files for the Wurqit application.
 
 ## Test Files
 

@@ -860,7 +860,7 @@ async function generateWorkoutVideo(
   };
 
   logToBoth(`${colors.BLUE}================================${colors.NC}`);
-  logToBoth(`${colors.BLUE}    WORKOUT VIDEO GENERATOR    ${colors.NC}`);
+  logToBoth(`${colors.BLUE}             Wurqit             ${colors.NC}`);
   logToBoth(`${colors.BLUE}================================${colors.NC}`);
   logToBoth("");
 
