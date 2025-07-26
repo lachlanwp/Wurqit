@@ -69,6 +69,28 @@ Run the following commands
 
 `yarn start`
 
+## Testing
+
+Run the test suite with Jest:
+
+```bash
+npm test
+```
+
+Run tests in watch mode:
+
+```bash
+npm run test:watch
+```
+
+Run tests with coverage:
+
+```bash
+npm test -- --coverage
+```
+
+See the [tests/README.md](tests/README.md) for detailed testing information.
+
 ## Build for release
 
 You will need to create an `.env` file in the root of the repo with the following contents
