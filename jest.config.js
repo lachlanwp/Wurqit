@@ -6,8 +6,10 @@ module.exports = {
   coverageReporters: ['text', 'lcov', 'html', 'json-summary'],
   coveragePathIgnorePatterns: [
     '/node_modules/',
-    '/tests/'
+    '/tests/',
+    '/coverage/'
   ],
   testTimeout: 60000, // 60 seconds timeout for video generation tests
-  verbose: true
+  verbose: true,
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.js']
 }; 

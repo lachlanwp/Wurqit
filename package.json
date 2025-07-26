@@ -9,6 +9,7 @@
     "test:watch": "jest --watch"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.28.0",
     "@electron/notarize": "^2.2.0",
     "dotenv-cli": "^4.0.0",
     "electron": "^30.0.0",
