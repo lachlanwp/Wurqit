@@ -6,7 +6,7 @@
 
 <div align="center">
     <a href="https://github.com/lachlanpearce/Wurqit/actions/workflows/test-simple.yml">
-        <img src="https://img.shields.io/badge/tests-passing-brightgreen" alt="Tests" />
+        <img src="https://github.com/lachlanpearce/Wurqit/actions/workflows/test-simple.yml/badge.svg?branch=main" alt="Tests" />
     </a>
     <a href="https://github.com/lachlanpearce/Wurqit/actions/workflows/test-simple.yml">
         <img src="https://img.shields.io/badge/coverage-23.7%25-orange" alt="Coverage" />
