@@ -35,21 +35,9 @@ jobs:
     - name: Extract coverage percent
       run: |
         if [ -f coverage/coverage-summary.json ]; then
-          node <<'EOF'
-          const fs = require('fs');
-          const summary = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf-8'));
-          const pct = summary.total.statements.pct;
-          const badge = {
-            schemaVersion: 1,
-            label: "coverage",
-            message: `${pct}%`,
-            color: pct > 90 ? "brightgreen" : pct > 75 ? "yellow" : "red"
-          };
-          fs.mkdirSync('.badge', { recursive: true });
-          fs.writeFileSync('.badge/coverage.json', JSON.stringify(badge));
-          EOF
+          node -e "const fs = require('fs'); const summary = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf-8')); const pct = summary.total.statements.pct; const badge = { schemaVersion: 1, label: 'coverage', message: `${pct}%`, color: pct > 90 ? 'brightgreen' : pct > 75 ? 'yellow' : 'red' }; fs.mkdirSync('.badge', { recursive: true }); fs.writeFileSync('.badge/coverage.json', JSON.stringify(badge));"
         else
-          echo "No coverage summary found, skipping badge generation."
+          echo 'No coverage summary found, skipping badge generation.'
         fi
 
     - name: Upload badge to `gh-pages`
