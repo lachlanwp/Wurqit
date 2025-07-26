@@ -1,10 +1,13 @@
 # 💪 Wurqit: Workout Video Generator 🏋️
 
-<div align="center">
-    <img src="media/icon/apple.png" alt="Description" width="200px" style="max-width:100%; height:auto;" /> 
-</div>
 
 ![Tests](https://github.com/lachlanwp/wurqit/actions/workflows/tests.yml/badge.svg)
+[![codecov](https://codecov.io/gh/lachlanwp/wurqit/branch/main/graph/badge.svg)](https://codecov.io/gh/lachlanwp/wurqit)
+
+<div align="center">
+    <img src="promo.png" alt="Description" style="max-width:100%; height:auto;" /> 
+</div>
+
 
 Wurqit is your ultimate desktop workout video generator — built for fitness enthusiasts who want total control over their routines without the hassle.
 
