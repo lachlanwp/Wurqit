@@ -22,7 +22,7 @@ Just set your:
 
 No subscriptions. No setup. No internet required. Just launch the app and start moving.
 
-![User interface](screenshot.png)
+![User interface](media/images/screenshot.png)
 
 # Quick start
 
