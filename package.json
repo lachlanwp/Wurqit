@@ -12,7 +12,7 @@
     "@electron/notarize": "^2.2.0",
     "dotenv-cli": "^4.0.0",
     "electron": "^30.0.0",
-    "electron-builder": "^24.6.0",
+    "electron-builder": "^26.0.12",
     "jest": "^30.0.5"
   },
   "dependencies": {
@@ -20,13 +20,12 @@
     "ffmpeg-static": "^5.1.0"
   },
   "build": {
+    "afterSign": "notarize.js",
     "appId": "com.lachlanpearce.wurqit",
     "productName": "Wurqit",
     "files": [
       "**/*",
-      "!media/**/*",
-      "media/images/**/*",
-      "media/icon/**/*"
+      "!media/**/*"
     ],
     "asarUnpack": [
       "node_modules/ffmpeg-static/**"
@@ -61,8 +60,7 @@
         "arch": [
           "universal"
         ]
-      },
-      "notarize": "./notarize.js"
+      }
     },
     "dmg": {
       "sign": false
