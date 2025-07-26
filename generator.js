@@ -39,14 +39,17 @@ function getFfmpegPath() {
 
   // Try to find the binary in the unpacked resources
   const possiblePaths = [
-    path.join(
-      process.resourcesPath,
-      "app.asar.unpacked",
-      "node_modules",
-      "ffmpeg-static",
-      binaryName
-    ),
-    path.join(process.resourcesPath, "app.asar.unpacked", "ffmpeg", binaryName),
+    // Only try process.resourcesPath if it exists
+    ...(process.resourcesPath ? [
+      path.join(
+        process.resourcesPath,
+        "app.asar.unpacked",
+        "node_modules",
+        "ffmpeg-static",
+        binaryName
+      ),
+      path.join(process.resourcesPath, "app.asar.unpacked", "ffmpeg", binaryName)
+    ] : []),
     path.join(
       __dirname,
       "..",
@@ -132,6 +135,12 @@ function getDesktopPath() {
   const platform = os.platform();
   const homeDir = os.homedir();
 
+  // Handle null or undefined homeDir
+  if (!homeDir) {
+    // Fallback to current directory if homeDir is not available
+    return process.cwd();
+  }
+
   switch (platform) {
     case "win32": // Windows
       return path.join(homeDir, "Desktop");
@@ -198,10 +207,11 @@ function getBaseDir() {
   try {
     if (
       process.mainModule &&
+      process.mainModule.filename &&
       process.mainModule.filename.indexOf("app.asar") !== -1
     ) {
       // Running from asar, use resourcesPath
-      baseDir = process.resourcesPath;
+      baseDir = process.resourcesPath || __dirname;
     } else {
       // Dev mode
       baseDir = __dirname;
@@ -279,12 +289,22 @@ function getEquipment(categories) {
   for (const category of categories) {
     const categoryDir = path.join(videosDir, category);
     if (fs.existsSync(categoryDir)) {
-      const items = fs.readdirSync(categoryDir);
-      for (const item of items) {
-        const itemPath = path.join(categoryDir, item);
-        if (fs.statSync(itemPath).isDirectory()) {
-          equipmentSet.add(item);
+      try {
+        const items = fs.readdirSync(categoryDir);
+        for (const item of items) {
+          try {
+            const itemPath = path.join(categoryDir, item);
+            if (fs.statSync(itemPath).isDirectory()) {
+              equipmentSet.add(item);
+            }
+          } catch (error) {
+            // Skip items that can't be stat'd
+            console.warn(`Could not stat ${itemPath}: ${error.message}`);
+          }
         }
+      } catch (error) {
+        // Skip categories that can't be read
+        console.warn(`Could not read directory ${categoryDir}: ${error.message}`);
       }
     }
   }
@@ -303,11 +323,16 @@ function getExerciseVideosByEquipment(categories, equipment) {
     for (const category of categories) {
       const equipDir = path.join(videosDir, category, equip);
       if (fs.existsSync(equipDir)) {
-        const items = fs.readdirSync(equipDir);
-        for (const item of items) {
-          if (item.toLowerCase().endsWith(".mp4")) {
-            equipmentVideos[equip].push(path.join(equipDir, item));
+        try {
+          const items = fs.readdirSync(equipDir);
+          for (const item of items) {
+            if (item.toLowerCase().endsWith(".mp4")) {
+              equipmentVideos[equip].push(path.join(equipDir, item));
+            }
           }
+        } catch (error) {
+          // Skip equipment directories that can't be read
+          console.warn(`Could not read directory ${equipDir}: ${error.message}`);
         }
       }
     }
@@ -1184,6 +1209,8 @@ module.exports = {
   getDesktopPath,
   checkFfmpeg,
   getFfmpegPath,
+  getBaseDir,
+  getBaseMediaDir,
   getCategories,
   getEquipment,
   getExerciseVideosByEquipment,
