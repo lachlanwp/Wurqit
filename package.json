@@ -61,7 +61,8 @@
         "arch": [
           "universal"
         ]
-      }
+      },
+      "notarize": "./notarize.js"
     },
     "dmg": {
       "sign": false

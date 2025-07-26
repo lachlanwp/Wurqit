@@ -51,6 +51,7 @@ This is an Electron desktop application. All dependencies are bundled with the a
         - audio     | contains audio for exercise videos
         - icon      | contains icon files for the app
         - videos    | contains all the exercise videos
+        - images    | contains images for the app
     - tests         | contains tests for the main app code
     - .env          | the environment variables used for builds
     - generator.js  | the main JS for generating the videos
