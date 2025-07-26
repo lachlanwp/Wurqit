@@ -45,10 +45,10 @@ jobs:
           fs.writeFileSync('.badge/coverage.json', JSON.stringify(badge));
           EOF
 
-      - name: Upload badge to `gh-pages`
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: .badge
-          destination_dir: badges  # /badges/coverage.json
+    - name: Upload badge to `gh-pages`
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_branch: gh-pages
+        publish_dir: .badge
+        destination_dir: badges  # /badges/coverage.json
