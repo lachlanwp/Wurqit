@@ -2,9 +2,9 @@ name: Tests
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 permissions:
   contents: write
@@ -17,62 +17,62 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [18.x, 20.x]
+        node-version: [20.x]
 
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    
-    - name: Install dependencies
-      run: yarn install
-    
-    - name: Run tests with coverage
-      run: yarn test -- --coverage
-    
-    - name: List coverage directory
-      run: ls -R coverage || echo "No coverage directory"
-    
-    - name: Extract coverage percent and generate badge
-      run: |
-        if [ -f coverage/coverage-summary.json ]; then
-          # Extract coverage percentage from JSON summary
-          PCT=$(node -e "
-            const fs = require('fs');
-            const summary = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf-8'));
-            const pct = Math.round(summary.total.statements.pct);
-            console.log(pct);
-          ")
-          
-          # Determine badge color
-          if [ $PCT -ge 90 ]; then
-            COLOR="brightgreen"
-          elif [ $PCT -ge 75 ]; then
-            COLOR="yellow"
-          else
-            COLOR="red"
-          fi
-          
-          # Create badge JSON
-          mkdir -p .badge
-          echo '{"schemaVersion": 1, "label": "coverage", "message": "'$PCT'%", "color": "'$COLOR'", "namedLogo": "jest"}' > .badge/coverage.json
-          
-          echo "Generated coverage badge: ${PCT}% (${COLOR})"
-        else
-          echo 'No coverage summary found, creating default badge.'
-          mkdir -p .badge
-          echo '{"schemaVersion": 1, "label": "coverage", "message": "unknown", "color": "lightgrey"}' > .badge/coverage.json
-        fi
+      - uses: actions/checkout@v4
 
-    - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v4
-      if: github.ref == 'refs/heads/main'
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_branch: gh-pages
-        publish_dir: .badge
-        destination_dir: badges
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Run tests with coverage
+        run: yarn test -- --coverage
+
+      - name: List coverage directory
+        run: ls -R coverage || echo "No coverage directory"
+
+      - name: Extract coverage percent and generate badge
+        run: |
+          if [ -f coverage/coverage-summary.json ]; then
+            # Extract coverage percentage from JSON summary
+            PCT=$(node -e "
+              const fs = require('fs');
+              const summary = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf-8'));
+              const pct = Math.round(summary.total.statements.pct);
+              console.log(pct);
+            ")
+            
+            # Determine badge color
+            if [ $PCT -ge 90 ]; then
+              COLOR="brightgreen"
+            elif [ $PCT -ge 75 ]; then
+              COLOR="yellow"
+            else
+              COLOR="red"
+            fi
+            
+            # Create badge JSON
+            mkdir -p .badge
+            echo '{"schemaVersion": 1, "label": "coverage", "message": "'$PCT'%", "color": "'$COLOR'", "namedLogo": "jest"}' > .badge/coverage.json
+            
+            echo "Generated coverage badge: ${PCT}% (${COLOR})"
+          else
+            echo 'No coverage summary found, creating default badge.'
+            mkdir -p .badge
+            echo '{"schemaVersion": 1, "label": "coverage", "message": "unknown", "color": "lightgrey"}' > .badge/coverage.json
+          fi
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        if: github.ref == 'refs/heads/main'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: .badge
+          destination_dir: badges
