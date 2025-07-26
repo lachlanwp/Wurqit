@@ -27,7 +27,7 @@ No subscriptions. No setup. No internet required. Just launch the app and start 
 
 # Quick start
 
-Download the installer for your operating system from the releases tab in this repo. After downloading it to your computer, run the installer to install it on your computer.
+Download the installer for your operating system from the releases tab in this repo. After downloading it to your computer, run the installer to install it on your computer
 
 # Options available
 
