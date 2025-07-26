@@ -1,0 +1,60 @@
+{
+  "name": "workout-app",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^30.0.0",
+    "electron-builder": "^24.6.0",
+    "electron-notarize": "^2.1.0"
+  },
+  "dependencies": {
+    "ffmpeg-static": "^5.1.0",
+    "electron-is-dev": "^1.2.0"
+  },
+  "build": {
+    "afterSign": "./notarize.js",
+    "appId": "com.lachlanpearce.workout",
+    "productName": "Workout Generator",
+    "files": [
+      "**/*",
+      "media/**/*"
+    ],
+    "directories": {
+      "buildResources": "media"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "media/icon/icon.ico"
+    },
+    "mac": {
+      "category": "public.app-category.utilities",
+      "icon": "media/icon/icon.icns",
+      "entitlements": "info.plist",
+      "entitlementsInherit": "info.inherit.plist",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "target": {
+        "target": "dmg",
+        "arch": [
+          "universal"
+        ]
+      }
+    },
+    "dmg": {
+      "sign": false
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "media/icon/icon.png"
+    }
+  }
+}
