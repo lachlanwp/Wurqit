@@ -143,6 +143,155 @@ get_exercise_videos_filtered() {
     printf '%s\n' "${videos[@]}"
 }
 
+# Function to get exercise videos grouped by equipment type
+get_exercise_videos_by_equipment() {
+    local videos_dir="videos"
+    local -a categories=()
+    local -a equipment=()
+    
+    # Read categories and equipment from arguments
+    while [[ "$1" != "--" ]]; do categories+=("$1"); shift; done
+    shift # skip --
+    while [[ $# -gt 0 ]]; do equipment+=("$1"); shift; done
+    
+    # Collect videos by equipment type and output directly
+    for equip in "${equipment[@]}"; do
+        echo "EQUIPMENT:$equip"
+        for category in "${categories[@]}"; do
+            local equip_dir="$videos_dir/$category/$equip"
+            if [[ -d "$equip_dir" ]]; then
+                find "$equip_dir" -name "*.mp4" -print
+            fi
+        done
+        echo "END_EQUIPMENT"
+    done
+}
+
+# Function to select exercises with even distribution across equipment types
+select_exercises_evenly() {
+    local max_exercises="$1"
+    local -a selected_categories=("${@:2}")
+    local -a selected_equipment=("${@:3}")
+    local -a selected_exercises=()
+    
+    # Parse equipment videos data
+    local current_equipment=""
+    local -a current_videos=()
+    local -a all_equipment_videos=()
+    local -a all_equipment_names=()
+    
+    while IFS= read -r line; do
+        if [[ "$line" =~ ^EQUIPMENT:(.+)$ ]]; then
+            # Save previous equipment if exists
+            if [[ -n "$current_equipment" ]]; then
+                all_equipment_names+=("$current_equipment")
+                # Join videos with newlines
+                local videos_str=""
+                for video in "${current_videos[@]}"; do
+                    if [[ -n "$videos_str" ]]; then
+                        videos_str="$videos_str"$'\n'"$video"
+                    else
+                        videos_str="$video"
+                    fi
+                done
+                all_equipment_videos+=("$videos_str")
+            fi
+            current_equipment="${BASH_REMATCH[1]}"
+            current_videos=()
+        elif [[ "$line" == "END_EQUIPMENT" ]]; then
+            all_equipment_names+=("$current_equipment")
+            # Join videos with newlines
+            local videos_str=""
+            for video in "${current_videos[@]}"; do
+                if [[ -n "$videos_str" ]]; then
+                    videos_str="$videos_str"$'\n'"$video"
+                else
+                    videos_str="$video"
+                fi
+            done
+            all_equipment_videos+=("$videos_str")
+            current_equipment=""
+            current_videos=()
+        elif [[ -n "$current_equipment" ]] && [[ -n "$line" ]]; then
+            current_videos+=("$line")
+        fi
+    done < <(get_exercise_videos_by_equipment "${selected_categories[@]}" -- "${selected_equipment[@]}")
+    
+    # Calculate exercises per equipment type
+    local exercises_per_equipment=$((max_exercises / ${#selected_equipment[@]}))
+    local remaining_exercises=$((max_exercises % ${#selected_equipment[@]}))
+    
+    # Output debug info to stderr so it doesn't interfere with the return value
+    echo "Distributing $max_exercises exercises across ${#selected_equipment[@]} equipment types" >&2
+    echo "Base exercises per equipment: $exercises_per_equipment" >&2
+    if [[ $remaining_exercises -gt 0 ]]; then
+        echo "Extra exercises to distribute: $remaining_exercises" >&2
+    fi
+    
+    # Select exercises from each equipment type
+    for ((i=0; i<${#selected_equipment[@]}; i++)); do
+        local equip="${selected_equipment[$i]}"
+        
+        # Find the videos for this equipment
+        local videos_for_equip=""
+        for ((j=0; j<${#all_equipment_names[@]}; j++)); do
+            if [[ "${all_equipment_names[$j]}" == "$equip" ]]; then
+                videos_for_equip="${all_equipment_videos[$j]}"
+                break
+            fi
+        done
+        
+        if [[ -z "$videos_for_equip" ]]; then
+            print_warning "No videos found for equipment: $equip"
+            continue
+        fi
+        
+        # Calculate how many exercises to select from this equipment
+        local exercises_to_select=$exercises_per_equipment
+        if [[ $i -lt $remaining_exercises ]]; then
+            exercises_to_select=$((exercises_to_select + 1))
+        fi
+        
+        # Convert videos string to array
+        local -a videos_array=()
+        while IFS= read -r video; do
+            if [[ -n "$video" ]]; then
+                videos_array+=("$video")
+            fi
+        done <<< "$videos_for_equip"
+        
+        # Shuffle videos for this equipment
+        local -a shuffled_videos=("${videos_array[@]}")
+        for ((j=${#shuffled_videos[@]}-1; j>0; j--)); do
+            local k=$((RANDOM % (j+1)))
+            local temp="${shuffled_videos[$j]}"
+            shuffled_videos[$j]="${shuffled_videos[$k]}"
+            shuffled_videos[$k]="$temp"
+        done
+        
+        # Select exercises from this equipment
+        local selected_from_equip=0
+        for video in "${shuffled_videos[@]}"; do
+            if [[ $selected_from_equip -lt $exercises_to_select ]] && [[ -n "$video" ]]; then
+                selected_exercises+=("$video")
+                selected_from_equip=$((selected_from_equip + 1))
+            fi
+        done
+        
+        echo "Selected $selected_from_equip exercises from '$equip'" >&2
+    done
+    
+    # Shuffle the final selection to randomize the order
+    for ((i=${#selected_exercises[@]}-1; i>0; i--)); do
+        local j=$((RANDOM % (i+1)))
+        local temp="${selected_exercises[$i]}"
+        selected_exercises[$i]="${selected_exercises[$j]}"
+        selected_exercises[$j]="$temp"
+    done
+    
+    printf '%s\n' "${selected_exercises[@]}"
+}
+
 # Function to create countdown video segment
 create_countdown_segment() {
     local duration="$1"
@@ -549,20 +698,6 @@ main() {
         exit 1
     fi
     
-    # Get exercise videos filtered by category and equipment
-    print_status "Loading exercise videos..."
-    exercise_videos=()
-    while IFS= read -r line; do
-      exercise_videos+=("$line")
-    done < <(get_exercise_videos_filtered "${selected_categories[@]}" -- "${selected_equipment[@]}")
-    
-    if [ ${#exercise_videos[@]} -eq 0 ]; then
-        print_error "No exercise videos found!"
-        exit 1
-    fi
-    
-    print_status "Loaded ${#exercise_videos[@]} exercise videos."
-    
     # Calculate how many exercises we can fit in the total workout time
     local total_seconds=$((total_workout_duration * 60))
     local time_per_exercise=$((work_duration * sets_per_station + rest_duration * (sets_per_station - 1) + station_rest))
@@ -574,22 +709,21 @@ main() {
         exit 1
     fi
     
-    # Randomly select exercises
-    local selected_exercises=()
-    local available_exercises=("${exercise_videos[@]}")
+    # Select exercises with even distribution across equipment types
+    print_status "Selecting exercises with even distribution across equipment types..."
+    exercise_videos=()
+    while IFS= read -r line; do
+        if [[ -n "$line" ]]; then
+            exercise_videos+=("$line")
+        fi
+    done < <(select_exercises_evenly "$max_exercises" "${selected_categories[@]}" "${selected_equipment[@]}")
     
-    for ((i=0; i<max_exercises && i<${#available_exercises[@]}; i++)); do
-        local random_index=$((RANDOM % ${#available_exercises[@]}))
-        selected_exercises+=("${available_exercises[$random_index]}")
-        # Remove selected exercise to avoid duplicates
-        unset "available_exercises[$random_index]"
-        available_exercises=("${available_exercises[@]}")
-    done
+    if [ ${#exercise_videos[@]} -eq 0 ]; then
+        print_error "No exercise videos found or selected!"
+        exit 1
+    fi
     
-    print_status "Selected ${#selected_exercises[@]} exercises for ${total_workout_duration} minute workout."
-    
-    # Use selected exercises instead of all exercises
-    exercise_videos=("${selected_exercises[@]}")
+    print_status "Selected ${#exercise_videos[@]} exercises for ${total_workout_duration} minute workout."
     
     # Calculate total workout time
     local total_sets=$((sets_per_station * ${#exercise_videos[@]}))
