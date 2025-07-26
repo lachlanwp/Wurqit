@@ -14,28 +14,28 @@ This directory contains all the Jest test files for the Wurqit application.
 
 ### Run All Tests
 ```bash
-npm test
+yarn test
 ```
 
 ### Run Tests in Watch Mode
 ```bash
-npm run test:watch
+yarn test:watch
 ```
 
 ### Run Tests with Coverage
 ```bash
-npm test -- --coverage
+yarn test -- --coverage
 ```
 
 ### Run Specific Test File
 ```bash
-npm test -- test-generator.test.js
+yarn test -- test-generator.test.js
 ```
 
 ### Run Tests from Parent Directory
 ```bash
 # From project root
-npm test
+yarn test
 ```
 
 ## Test Descriptions
