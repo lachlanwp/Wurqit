@@ -1,14 +1,19 @@
-const { notarize } = require('electron-notarize');
+const { notarize } = require("@electron/notarize");
 
 exports.default = async function notarizing(context) {
   const { electronPlatformName, appOutDir } = context;
-  if (electronPlatformName !== 'darwin') {
+  if (electronPlatformName !== "darwin") {
     return;
   }
+
+  const appName = context.packager.appInfo.productFilename;
+
   return await notarize({
-    appBundleId: 'com.example.workoutgenerator',
-    appPath: `${appOutDir}/Workout Generator.app`,
-    appleId: 'APPLE_ID', // TODO: Replace with your Apple ID
-    appleIdPassword: 'APPLE_ID_PASSWORD', // TODO: Replace with your app-specific password
+    appBundleId: "com.lachlanpearce.workout",
+    appPath: `${appOutDir}/${appName}.app`,
+    appleId: process.env.APPLE_ID,
+    appleIdPassword: process.env.APPLE_APP_SPECIFIC_PASSWORD,
+    teamId: process.env.APPLE_TEAM_ID,
+    tool: "notarytool",
   });
-}; 
+};

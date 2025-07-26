@@ -1,619 +1,728 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Workout Video Generator</title>
-  <!-- Favicons and App Icons -->
-  <link rel="icon" type="image/png" sizes="32x32" href="media/icon/favicon-32.png">
-  <link rel="icon" type="image/png" sizes="57x57" href="media/icon/favicon-57.png">
-  <link rel="icon" type="image/png" sizes="72x72" href="media/icon/favicon-72.png">
-  <link rel="icon" type="image/png" sizes="96x96" href="media/icon/favicon-96.png">
-  <link rel="icon" type="image/png" sizes="120x120" href="media/icon/favicon-120.png">
-  <link rel="icon" type="image/png" sizes="128x128" href="media/icon/favicon-128.png">
-  <link rel="icon" type="image/png" sizes="144x144" href="media/icon/favicon-144.png">
-  <link rel="icon" type="image/png" sizes="152x152" href="media/icon/favicon-152.png">
-  <link rel="icon" type="image/png" sizes="195x195" href="media/icon/favicon-195.png">
-  <link rel="icon" type="image/png" sizes="228x228" href="media/icon/favicon-228.png">
-  <link rel="shortcut icon" href="media/icon/favicon.ico">
-  <link rel="apple-touch-icon" sizes="120x120" href="media/icon/favicon-120.png">
-  <link rel="apple-touch-icon" sizes="152x152" href="media/icon/favicon-152.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="media/icon/favicon-195.png">
-  <link rel="apple-touch-icon" sizes="228x228" href="media/icon/favicon-228.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="media/icon/favicon-32.png">
-  <link rel="manifest" href="/manifest.json">
-  <meta name="msapplication-TileColor" content="#ffffff">
-  <meta name="msapplication-TileImage" content="media/icon/favicon-144.png">
-  <meta name="theme-color" content="#ffffff">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-      background-color: #f5f5f5;
-      user-select: none;
-      -webkit-user-select: none;
-      -ms-user-select: none;
-      -moz-user-select: none;
-    }
-    
-    .container {
-      background-color: white;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    
-    h1 {
-      text-align: center;
-      color: #333;
-      margin-bottom: 30px;
-    }
-    
-    .form-section {
-      margin-bottom: 25px;
-      padding: 20px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      background-color: #fafafa;
-    }
-    
-    .form-section h3 {
-      margin-top: 0;
-      color: #555;
-      border-bottom: 2px solid #007bff;
-      padding-bottom: 5px;
-    }
-    
-    .form-group {
-      margin-bottom: 15px;
-    }
-    
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: bold;
-      color: #333;
-    }
-    
-    select, input[type="number"] {
-      width: 100%;
-      padding: 8px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 14px;
-    }
-    
-    .checkbox-group {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 10px;
-      margin-top: 10px;
-    }
-    
-    .checkbox-item {
-      display: flex;
-      align-items: center;
-      padding: 8px;
-      background-color: white;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-    }
-    
-    .checkbox-item input[type="checkbox"] {
-      margin-right: 8px;
-      width: auto;
-    }
-    
-    .checkbox-item label {
-      margin: 0;
-      font-weight: normal;
-      cursor: pointer;
-    }
-    
-    .submit-btn {
-      background-color: #007bff;
-      color: white;
-      padding: 12px 30px;
-      border: none;
-      border-radius: 5px;
-      font-size: 16px;
-      cursor: pointer;
-      width: 100%;
-      margin-top: 20px;
-    }
-    
-    .submit-btn:hover {
-      background-color: #0056b3;
-    }
-    
-    .submit-btn:disabled {
-      background-color: #ccc;
-      cursor: not-allowed;
-    }
-    
-    .error {
-      color: #dc3545;
-      font-size: 14px;
-      margin-top: 5px;
-    }
-    
-    .success {
-      color: #28a745;
-      font-size: 14px;
-      margin-top: 5px;
-    }
-    
-    .loading {
-      text-align: center;
-      color: #007bff;
-      font-style: italic;
-    }
-    
-    .progress-container {
-      display: none;
-      margin-top: 20px;
-      padding: 20px;
-      background-color: #f8f9fa;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-    }
-    
-    .progress-bar {
-      width: 100%;
-      height: 20px;
-      background-color: #e9ecef;
-      border-radius: 10px;
-      overflow: hidden;
-      margin-bottom: 10px;
-    }
-    
-    .progress-fill {
-      height: 100%;
-      background-color: #007bff;
-      width: 0%;
-      transition: width 0.3s ease;
-    }
-    
-    .progress-text {
-      text-align: center;
-      font-weight: bold;
-      color: #333;
-      margin-bottom: 5px;
-    }
-    
-    .progress-message {
-      text-align: center;
-      color: #666;
-      font-style: italic;
-    }
-    
-    #output {
-      margin-top: 20px;
-      padding: 15px;
-      background-color: #f8f9fa;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      white-space: pre-wrap;
-      font-family: monospace;
-      max-height: 300px;
-      overflow-y: auto;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>🏋️ Workout Video Generator</h1>
-    
-    <form id="workoutForm">
-      <!-- Duration Settings -->
-      <div class="form-section">
-        <h3>⏱️ Duration Settings</h3>
-        
-        <div class="form-group">
-          <label for="workDuration">Work Duration:</label>
-          <select id="workDuration" required>
-            <option value="">Select work duration</option>
-          </select>
-          <div class="error" id="workDurationError"></div>
+  <head>
+    <title>Workout Video Generator</title>
+    <!-- Favicons and App Icons -->
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="media/icon/windows/favicon-32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="57x57"
+      href="media/icon/windows/favicon-57.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="72x72"
+      href="media/icon/windows/favicon-72.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="96x96"
+      href="media/icon/windows/favicon-96.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="120x120"
+      href="media/icon/windows/favicon-120.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="128x128"
+      href="media/icon/windows/favicon-128.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="144x144"
+      href="media/icon/windows/favicon-144.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="152x152"
+      href="media/icon/windows/favicon-152.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="195x195"
+      href="media/icon/windows/favicon-195.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="228x228"
+      href="media/icon/windows/favicon-228.png"
+    />
+    <link rel="shortcut icon" href="media/icon/windows/favicon.ico" />
+    <link
+      rel="apple-touch-icon"
+      sizes="120x120"
+      href="media/icon/windows/favicon-120.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="152x152"
+      href="media/icon/windows/favicon-152.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="media/icon/windows/favicon-195.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="228x228"
+      href="media/icon/windows/favicon-228.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="media/icon/windows/favicon-32.png"
+    />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="msapplication-TileColor" content="#ffffff" />
+    <meta
+      name="msapplication-TileImage"
+      content="media/icon/windows/favicon-144.png"
+    />
+    <meta name="theme-color" content="#ffffff" />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+        user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        -moz-user-select: none;
+      }
+
+      .container {
+        background-color: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 30px;
+      }
+
+      .form-section {
+        margin-bottom: 25px;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background-color: #fafafa;
+      }
+
+      .form-section h3 {
+        margin-top: 0;
+        color: #555;
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 5px;
+      }
+
+      .form-group {
+        margin-bottom: 15px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #333;
+      }
+
+      select,
+      input[type="number"] {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+
+      .checkbox-group {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .checkbox-item {
+        display: flex;
+        align-items: center;
+        padding: 8px;
+        background-color: white;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+
+      .checkbox-item input[type="checkbox"] {
+        margin-right: 8px;
+        width: auto;
+      }
+
+      .checkbox-item label {
+        margin: 0;
+        font-weight: normal;
+        cursor: pointer;
+      }
+
+      .submit-btn {
+        background-color: #007bff;
+        color: white;
+        padding: 12px 30px;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        width: 100%;
+        margin-top: 20px;
+      }
+
+      .submit-btn:hover {
+        background-color: #0056b3;
+      }
+
+      .submit-btn:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+      }
+
+      .error {
+        color: #dc3545;
+        font-size: 14px;
+        margin-top: 5px;
+      }
+
+      .success {
+        color: #28a745;
+        font-size: 14px;
+        margin-top: 5px;
+      }
+
+      .loading {
+        text-align: center;
+        color: #007bff;
+        font-style: italic;
+      }
+
+      .progress-container {
+        display: none;
+        margin-top: 20px;
+        padding: 20px;
+        background-color: #f8f9fa;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 20px;
+        background-color: #e9ecef;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 10px;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background-color: #007bff;
+        width: 0%;
+        transition: width 0.3s ease;
+      }
+
+      .progress-text {
+        text-align: center;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 5px;
+      }
+
+      .progress-message {
+        text-align: center;
+        color: #666;
+        font-style: italic;
+      }
+
+      #output {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        white-space: pre-wrap;
+        font-family: monospace;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🏋️ Workout Video Generator</h1>
+
+      <form id="workoutForm">
+        <!-- Duration Settings -->
+        <div class="form-section">
+          <h3>⏱️ Duration Settings</h3>
+
+          <div class="form-group">
+            <label for="workDuration">Work Duration:</label>
+            <select id="workDuration" required>
+              <option value="">Select work duration</option>
+            </select>
+            <div class="error" id="workDurationError"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="restDuration">Rest Duration:</label>
+            <select id="restDuration" required>
+              <option value="">Select rest duration</option>
+            </select>
+            <div class="error" id="restDurationError"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="setsPerStation">Number of Sets:</label>
+            <select id="setsPerStation" required>
+              <option value="">Select number of sets</option>
+            </select>
+            <div class="error" id="setsPerStationError"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="stationRest">Station Rest:</label>
+            <select id="stationRest" required>
+              <option value="">Select station rest</option>
+            </select>
+            <div class="error" id="stationRestError"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="totalWorkoutDuration">Total Workout Duration:</label>
+            <select id="totalWorkoutDuration" required>
+              <option value="">Select total workout duration</option>
+            </select>
+            <div class="error" id="totalWorkoutDurationError"></div>
+          </div>
         </div>
-        
-        <div class="form-group">
-          <label for="restDuration">Rest Duration:</label>
-          <select id="restDuration" required>
-            <option value="">Select rest duration</option>
-          </select>
-          <div class="error" id="restDurationError"></div>
+
+        <!-- Exercise Categories -->
+        <div class="form-section">
+          <h3>📂 Exercise Categories</h3>
+          <div id="categoriesContainer">
+            <div class="loading">Loading categories...</div>
+          </div>
+          <div class="error" id="categoriesError"></div>
         </div>
-        
-        <div class="form-group">
-          <label for="setsPerStation">Number of Sets:</label>
-          <select id="setsPerStation" required>
-            <option value="">Select number of sets</option>
-          </select>
-          <div class="error" id="setsPerStationError"></div>
+
+        <!-- Equipment -->
+        <div class="form-section">
+          <h3>🏋️ Equipment</h3>
+          <div id="equipmentContainer">
+            <div class="loading">Loading equipment...</div>
+          </div>
+          <div class="error" id="equipmentError"></div>
         </div>
-        
-        <div class="form-group">
-          <label for="stationRest">Station Rest:</label>
-          <select id="stationRest" required>
-            <option value="">Select station rest</option>
-          </select>
-          <div class="error" id="stationRestError"></div>
-        </div>
-        
-        <div class="form-group">
-          <label for="totalWorkoutDuration">Total Workout Duration:</label>
-          <select id="totalWorkoutDuration" required>
-            <option value="">Select total workout duration</option>
-          </select>
-          <div class="error" id="totalWorkoutDurationError"></div>
-        </div>
-      </div>
-      
-      <!-- Exercise Categories -->
-      <div class="form-section">
-        <h3>📂 Exercise Categories</h3>
-        <div id="categoriesContainer">
-          <div class="loading">Loading categories...</div>
-        </div>
-        <div class="error" id="categoriesError"></div>
-      </div>
-      
-      <!-- Equipment -->
-      <div class="form-section">
-        <h3>🏋️ Equipment</h3>
-        <div id="equipmentContainer">
-          <div class="loading">Loading equipment...</div>
-        </div>
-        <div class="error" id="equipmentError"></div>
-      </div>
-      
-      <button type="submit" class="submit-btn" id="submitBtn">
-        🎬 Generate Workout Video
-      </button>
-      <!-- <button type="button" class="submit-btn" id="debugBtn" style="margin-left: 10px; background-color: #6c757d;">
+
+        <button type="submit" class="submit-btn" id="submitBtn">
+          🎬 Generate Workout Video
+        </button>
+        <!-- <button type="button" class="submit-btn" id="debugBtn" style="margin-left: 10px; background-color: #6c757d;">
         🔧 Debug FFmpeg
       </button> -->
-    </form>
-    
-    <!-- Progress Container -->
-    <div class="progress-container" id="progressContainer">
-      <div class="progress-text" id="progressText">0%</div>
-      <div class="progress-bar">
-        <div class="progress-fill" id="progressFill"></div>
-      </div>
-      <div class="progress-message" id="progressMessage">Initializing...</div>
-    </div>
-    
-    <div id="output"></div>
-  </div>
+      </form>
 
-  <script>
-    // Disable right-click context menu
-    document.addEventListener('contextmenu', function(e) {
-      e.preventDefault();
-    });
-    // Populate dropdown options
-    function populateDropdowns() {
-      // Work duration: 20-120 seconds in 5-second increments
-      const workDurationSelect = document.getElementById('workDuration');
-      for (let i = 20; i <= 120; i += 5) {
-        const option = document.createElement('option');
-        option.value = i;
-        option.textContent = `${i} seconds`;
-        workDurationSelect.appendChild(option);
+      <!-- Progress Container -->
+      <div class="progress-container" id="progressContainer">
+        <div class="progress-text" id="progressText">0%</div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-message" id="progressMessage">Initializing...</div>
+      </div>
+
+      <div id="output"></div>
+    </div>
+
+    <script>
+      // Disable right-click context menu
+      document.addEventListener("contextmenu", function (e) {
+        e.preventDefault();
+      });
+      // Populate dropdown options
+      function populateDropdowns() {
+        // Work duration: 20-120 seconds in 5-second increments
+        const workDurationSelect = document.getElementById("workDuration");
+        for (let i = 20; i <= 120; i += 5) {
+          const option = document.createElement("option");
+          option.value = i;
+          option.textContent = `${i} seconds`;
+          workDurationSelect.appendChild(option);
+        }
+
+        // Rest duration: 5-60 seconds in 5-second increments
+        const restDurationSelect = document.getElementById("restDuration");
+        for (let i = 5; i <= 60; i += 5) {
+          const option = document.createElement("option");
+          option.value = i;
+          option.textContent = `${i} seconds`;
+          restDurationSelect.appendChild(option);
+        }
+
+        // Sets per station: 2-6 in 1 set increments
+        const setsPerStationSelect = document.getElementById("setsPerStation");
+        for (let i = 2; i <= 6; i++) {
+          const option = document.createElement("option");
+          option.value = i;
+          option.textContent = `${i} sets`;
+          setsPerStationSelect.appendChild(option);
+        }
+
+        // Station rest: 5-40 seconds in 5-second increments
+        const stationRestSelect = document.getElementById("stationRest");
+        for (let i = 5; i <= 40; i += 5) {
+          const option = document.createElement("option");
+          option.value = i;
+          option.textContent = `${i} seconds`;
+          stationRestSelect.appendChild(option);
+        }
+
+        // Total workout duration: 10-120 minutes in 10-minute increments
+        const totalWorkoutDurationSelect = document.getElementById(
+          "totalWorkoutDuration"
+        );
+        for (let i = 10; i <= 120; i += 10) {
+          const option = document.createElement("option");
+          option.value = i;
+          option.textContent = `${i} minutes`;
+          totalWorkoutDurationSelect.appendChild(option);
+        }
       }
-      
-      // Rest duration: 5-60 seconds in 5-second increments
-      const restDurationSelect = document.getElementById('restDuration');
-      for (let i = 5; i <= 60; i += 5) {
-        const option = document.createElement('option');
-        option.value = i;
-        option.textContent = `${i} seconds`;
-        restDurationSelect.appendChild(option);
+
+      // Load categories from the generator module
+      async function loadCategories() {
+        try {
+          const categories = await window.api.getCategories();
+          const container = document.getElementById("categoriesContainer");
+          container.innerHTML = "";
+
+          const checkboxGroup = document.createElement("div");
+          checkboxGroup.className = "checkbox-group";
+
+          categories.forEach((category) => {
+            const checkboxItem = document.createElement("div");
+            checkboxItem.className = "checkbox-item";
+
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.id = `category-${category}`;
+            checkbox.value = category;
+            checkbox.name = "categories";
+
+            const label = document.createElement("label");
+            label.htmlFor = `category-${category}`;
+            label.textContent = category;
+
+            checkboxItem.appendChild(checkbox);
+            checkboxItem.appendChild(label);
+            checkboxGroup.appendChild(checkboxItem);
+          });
+
+          container.appendChild(checkboxGroup);
+        } catch (error) {
+          document.getElementById(
+            "categoriesContainer"
+          ).innerHTML = `<div class="error">Error loading categories: ${error.message}</div>`;
+        }
       }
-      
-      // Sets per station: 2-6 in 1 set increments
-      const setsPerStationSelect = document.getElementById('setsPerStation');
-      for (let i = 2; i <= 6; i++) {
-        const option = document.createElement('option');
-        option.value = i;
-        option.textContent = `${i} sets`;
-        setsPerStationSelect.appendChild(option);
+
+      // Load equipment based on selected categories
+      async function loadEquipment() {
+        try {
+          const selectedCategories = getSelectedCategories();
+          if (selectedCategories.length === 0) {
+            document.getElementById("equipmentContainer").innerHTML =
+              '<div class="loading">Select categories first to load equipment</div>';
+            return;
+          }
+
+          const equipment = await window.api.getEquipment(selectedCategories);
+          const container = document.getElementById("equipmentContainer");
+          container.innerHTML = "";
+
+          const checkboxGroup = document.createElement("div");
+          checkboxGroup.className = "checkbox-group";
+
+          equipment.forEach((equip) => {
+            const checkboxItem = document.createElement("div");
+            checkboxItem.className = "checkbox-item";
+
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.id = `equipment-${equip}`;
+            checkbox.value = equip;
+            checkbox.name = "equipment";
+
+            const label = document.createElement("label");
+            label.htmlFor = `equipment-${equip}`;
+            label.textContent = equip;
+
+            checkboxItem.appendChild(checkbox);
+            checkboxItem.appendChild(label);
+            checkboxGroup.appendChild(checkboxItem);
+          });
+
+          container.appendChild(checkboxGroup);
+        } catch (error) {
+          document.getElementById(
+            "equipmentContainer"
+          ).innerHTML = `<div class="error">Error loading equipment: ${error.message}</div>`;
+        }
       }
-      
-      // Station rest: 5-40 seconds in 5-second increments
-      const stationRestSelect = document.getElementById('stationRest');
-      for (let i = 5; i <= 40; i += 5) {
-        const option = document.createElement('option');
-        option.value = i;
-        option.textContent = `${i} seconds`;
-        stationRestSelect.appendChild(option);
+
+      // Get selected categories
+      function getSelectedCategories() {
+        const checkboxes = document.querySelectorAll(
+          'input[name="categories"]:checked'
+        );
+        return Array.from(checkboxes).map((cb) => cb.value);
       }
-      
-      // Total workout duration: 10-120 minutes in 10-minute increments
-      const totalWorkoutDurationSelect = document.getElementById('totalWorkoutDuration');
-      for (let i = 10; i <= 120; i += 10) {
-        const option = document.createElement('option');
-        option.value = i;
-        option.textContent = `${i} minutes`;
-        totalWorkoutDurationSelect.appendChild(option);
+
+      // Get selected equipment
+      function getSelectedEquipment() {
+        const checkboxes = document.querySelectorAll(
+          'input[name="equipment"]:checked'
+        );
+        return Array.from(checkboxes).map((cb) => cb.value);
       }
-    }
-    
-    // Load categories from the generator module
-    async function loadCategories() {
-      try {
-        const categories = await window.api.getCategories();
-        const container = document.getElementById('categoriesContainer');
-        container.innerHTML = '';
-        
-        const checkboxGroup = document.createElement('div');
-        checkboxGroup.className = 'checkbox-group';
-        
-        categories.forEach(category => {
-          const checkboxItem = document.createElement('div');
-          checkboxItem.className = 'checkbox-item';
-          
-          const checkbox = document.createElement('input');
-          checkbox.type = 'checkbox';
-          checkbox.id = `category-${category}`;
-          checkbox.value = category;
-          checkbox.name = 'categories';
-          
-          const label = document.createElement('label');
-          label.htmlFor = `category-${category}`;
-          label.textContent = category;
-          
-          checkboxItem.appendChild(checkbox);
-          checkboxItem.appendChild(label);
-          checkboxGroup.appendChild(checkboxItem);
+
+      // Form validation
+      function validateForm() {
+        let isValid = true;
+
+        // Clear previous errors
+        document
+          .querySelectorAll(".error")
+          .forEach((el) => (el.textContent = ""));
+
+        // Validate required fields
+        const requiredFields = [
+          "workDuration",
+          "restDuration",
+          "setsPerStation",
+          "stationRest",
+          "totalWorkoutDuration",
+        ];
+
+        requiredFields.forEach((fieldId) => {
+          const field = document.getElementById(fieldId);
+          const errorElement = document.getElementById(fieldId + "Error");
+
+          if (!field.value) {
+            errorElement.textContent = "This field is required";
+            isValid = false;
+          }
         });
-        
-        container.appendChild(checkboxGroup);
-      } catch (error) {
-        document.getElementById('categoriesContainer').innerHTML = 
-          `<div class="error">Error loading categories: ${error.message}</div>`;
-      }
-    }
-    
-    // Load equipment based on selected categories
-    async function loadEquipment() {
-      try {
+
+        // Validate categories
         const selectedCategories = getSelectedCategories();
         if (selectedCategories.length === 0) {
-          document.getElementById('equipmentContainer').innerHTML = 
-            '<div class="loading">Select categories first to load equipment</div>';
-          return;
-        }
-        
-        const equipment = await window.api.getEquipment(selectedCategories);
-        const container = document.getElementById('equipmentContainer');
-        container.innerHTML = '';
-        
-        const checkboxGroup = document.createElement('div');
-        checkboxGroup.className = 'checkbox-group';
-        
-        equipment.forEach(equip => {
-          const checkboxItem = document.createElement('div');
-          checkboxItem.className = 'checkbox-item';
-          
-          const checkbox = document.createElement('input');
-          checkbox.type = 'checkbox';
-          checkbox.id = `equipment-${equip}`;
-          checkbox.value = equip;
-          checkbox.name = 'equipment';
-          
-          const label = document.createElement('label');
-          label.htmlFor = `equipment-${equip}`;
-          label.textContent = equip;
-          
-          checkboxItem.appendChild(checkbox);
-          checkboxItem.appendChild(label);
-          checkboxGroup.appendChild(checkboxItem);
-        });
-        
-        container.appendChild(checkboxGroup);
-      } catch (error) {
-        document.getElementById('equipmentContainer').innerHTML = 
-          `<div class="error">Error loading equipment: ${error.message}</div>`;
-      }
-    }
-    
-    // Get selected categories
-    function getSelectedCategories() {
-      const checkboxes = document.querySelectorAll('input[name="categories"]:checked');
-      return Array.from(checkboxes).map(cb => cb.value);
-    }
-    
-    // Get selected equipment
-    function getSelectedEquipment() {
-      const checkboxes = document.querySelectorAll('input[name="equipment"]:checked');
-      return Array.from(checkboxes).map(cb => cb.value);
-    }
-    
-    // Form validation
-    function validateForm() {
-      let isValid = true;
-      
-      // Clear previous errors
-      document.querySelectorAll('.error').forEach(el => el.textContent = '');
-      
-      // Validate required fields
-      const requiredFields = [
-        'workDuration', 'restDuration', 'setsPerStation', 
-        'stationRest', 'totalWorkoutDuration'
-      ];
-      
-      requiredFields.forEach(fieldId => {
-        const field = document.getElementById(fieldId);
-        const errorElement = document.getElementById(fieldId + 'Error');
-        
-        if (!field.value) {
-          errorElement.textContent = 'This field is required';
+          document.getElementById("categoriesError").textContent =
+            "Please select at least one category";
           isValid = false;
         }
-      });
-      
-      // Validate categories
-      const selectedCategories = getSelectedCategories();
-      if (selectedCategories.length === 0) {
-        document.getElementById('categoriesError').textContent = 'Please select at least one category';
-        isValid = false;
-      }
-      
-      // Validate equipment
-      const selectedEquipment = getSelectedEquipment();
-      if (selectedEquipment.length === 0) {
-        document.getElementById('equipmentError').textContent = 'Please select at least one equipment type';
-        isValid = false;
-      }
-      
-      return isValid;
-    }
-    
-    // Handle form submission
-    async function handleSubmit(event) {
-      event.preventDefault();
-      
-      if (!validateForm()) {
-        return;
-      }
-      
-      const submitBtn = document.getElementById('submitBtn');
-      const output = document.getElementById('output');
-      const progressContainer = document.getElementById('progressContainer');
-      const progressText = document.getElementById('progressText');
-      const progressFill = document.getElementById('progressFill');
-      const progressMessage = document.getElementById('progressMessage');
-      
-      submitBtn.disabled = true;
-      submitBtn.textContent = '🔄 Generating...';
-      output.textContent = 'Starting workout video generation...\n';
-      
-      // Show progress container
-      progressContainer.style.display = 'block';
-      progressText.textContent = '0%';
-      progressFill.style.width = '0%';
-      progressMessage.textContent = 'Initializing...';
-      
-      // Set up progress listener
-      window.api.onGenerationProgress((data) => {
-        const { progress, message } = data;
-        progressText.textContent = `${progress}%`;
-        progressFill.style.width = `${progress}%`;
-        progressMessage.textContent = message;
-        
-        // Add to output log
-        output.textContent += `\n[${progress}%] ${message}`;
-        output.scrollTop = output.scrollHeight;
-        
-        // Show output location when we get the first progress update
-        if (progress === 5) {
-          window.api.getDesktopPath().then(desktopPath => {
-            output.textContent += `\n📁 Output will be saved to your Desktop: ${desktopPath}`;
-            output.scrollTop = output.scrollHeight;
-          }).catch(error => {
-            output.textContent += `\n⚠️  Could not determine output location: ${error.message}`;
-            output.scrollTop = output.scrollHeight;
-          });
+
+        // Validate equipment
+        const selectedEquipment = getSelectedEquipment();
+        if (selectedEquipment.length === 0) {
+          document.getElementById("equipmentError").textContent =
+            "Please select at least one equipment type";
+          isValid = false;
         }
-      });
-      
-      // Set up console log listener
-      window.api.onConsoleLog((data) => {
-        const { level, message } = data;
-        
-        // Log to browser console with appropriate level
-        switch (level) {
-          case 'info':
-            console.log(`[INFO] ${message}`);
-            break;
-          case 'warn':
-            console.warn(`[WARNING] ${message}`);
-            break;
-          case 'error':
-            console.error(`[ERROR] ${message}`);
-            break;
-          default:
-            console.log(`[${level.toUpperCase()}] ${message}`);
-        }
-      });
-      
-      try {
-        const formData = {
-          workDuration: parseInt(document.getElementById('workDuration').value),
-          restDuration: parseInt(document.getElementById('restDuration').value),
-          setsPerStation: parseInt(document.getElementById('setsPerStation').value),
-          stationRest: parseInt(document.getElementById('stationRest').value),
-          totalWorkoutDuration: parseInt(document.getElementById('totalWorkoutDuration').value),
-          categories: getSelectedCategories(),
-          equipment: getSelectedEquipment()
-        };
-        
-        const result = await window.api.generateWorkoutVideo(formData);
-        output.textContent += `\n✅ Workout video generated successfully!\nOutput file: ${result}`;
-      } catch (error) {
-        output.textContent += `\n❌ Error: ${error.message}`;
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = '🎬 Generate Workout Video';
-        
-        // Hide progress container after a delay
-        setTimeout(() => {
-          progressContainer.style.display = 'none';
-        }, 3000);
-        
-        // Clean up listeners
-        window.api.removeGenerationProgress();
-        window.api.removeConsoleLog();
+
+        return isValid;
       }
-    }
-    
-    // Event listeners
-    document.addEventListener('DOMContentLoaded', () => {
-      populateDropdowns();
-      loadCategories();
-      
-      // Reload equipment when categories change
-      document.addEventListener('change', (event) => {
-        if (event.target.name === 'categories') {
-          loadEquipment();
+
+      // Handle form submission
+      async function handleSubmit(event) {
+        event.preventDefault();
+
+        if (!validateForm()) {
+          return;
         }
-      });
-      
-      // Form submission
-      document.getElementById('workoutForm').addEventListener('submit', handleSubmit);
-      
-      // Debug button
-      document.getElementById('debugBtn').addEventListener('click', async () => {
-        const output = document.getElementById('output');
-        output.textContent = '🔧 Debugging FFmpeg installation...\n';
-        
-        try {
-          const debugInfo = await window.api.debugFfmpeg();
-          output.textContent += `\n📋 FFmpeg Debug Information:\n`;
-          output.textContent += `Path: ${debugInfo.ffmpegPath}\n`;
-          output.textContent += `Exists: ${debugInfo.exists ? '✅ Yes' : '❌ No'}\n`;
-          output.textContent += `Resources Path: ${debugInfo.resourcesPath}\n`;
-          output.textContent += `Current Directory: ${debugInfo.currentDir}\n`;
-          output.textContent += `Development Mode: ${debugInfo.isDev ? 'Yes' : 'No'}\n`;
-          output.textContent += `Platform: ${debugInfo.platform}\n`;
-          output.textContent += `Architecture: ${debugInfo.arch}\n`;
-          
-          if (debugInfo.version) {
-            output.textContent += `Version: ${debugInfo.version}\n`;
-          } else if (debugInfo.versionError) {
-            output.textContent += `Version Error: ${debugInfo.versionError}\n`;
+
+        const submitBtn = document.getElementById("submitBtn");
+        const output = document.getElementById("output");
+        const progressContainer = document.getElementById("progressContainer");
+        const progressText = document.getElementById("progressText");
+        const progressFill = document.getElementById("progressFill");
+        const progressMessage = document.getElementById("progressMessage");
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = "🔄 Generating...";
+        output.textContent = "Starting workout video generation...\n";
+
+        // Show progress container
+        progressContainer.style.display = "block";
+        progressText.textContent = "0%";
+        progressFill.style.width = "0%";
+        progressMessage.textContent = "Initializing...";
+
+        // Set up progress listener
+        window.api.onGenerationProgress((data) => {
+          const { progress, message } = data;
+          progressText.textContent = `${progress}%`;
+          progressFill.style.width = `${progress}%`;
+          progressMessage.textContent = message;
+
+          // Add to output log
+          output.textContent += `\n[${progress}%] ${message}`;
+          output.scrollTop = output.scrollHeight;
+
+          // Show output location when we get the first progress update
+          if (progress === 5) {
+            window.api
+              .getDesktopPath()
+              .then((desktopPath) => {
+                output.textContent += `\n📁 Output will be saved to your Desktop: ${desktopPath}`;
+                output.scrollTop = output.scrollHeight;
+              })
+              .catch((error) => {
+                output.textContent += `\n⚠️  Could not determine output location: ${error.message}`;
+                output.scrollTop = output.scrollHeight;
+              });
           }
-          
-          output.scrollTop = output.scrollHeight;
+        });
+
+        // Set up console log listener
+        window.api.onConsoleLog((data) => {
+          const { level, message } = data;
+
+          // Log to browser console with appropriate level
+          switch (level) {
+            case "info":
+              console.log(`[INFO] ${message}`);
+              break;
+            case "warn":
+              console.warn(`[WARNING] ${message}`);
+              break;
+            case "error":
+              console.error(`[ERROR] ${message}`);
+              break;
+            default:
+              console.log(`[${level.toUpperCase()}] ${message}`);
+          }
+        });
+
+        try {
+          const formData = {
+            workDuration: parseInt(
+              document.getElementById("workDuration").value
+            ),
+            restDuration: parseInt(
+              document.getElementById("restDuration").value
+            ),
+            setsPerStation: parseInt(
+              document.getElementById("setsPerStation").value
+            ),
+            stationRest: parseInt(document.getElementById("stationRest").value),
+            totalWorkoutDuration: parseInt(
+              document.getElementById("totalWorkoutDuration").value
+            ),
+            categories: getSelectedCategories(),
+            equipment: getSelectedEquipment(),
+          };
+
+          const result = await window.api.generateWorkoutVideo(formData);
+          output.textContent += `\n✅ Workout video generated successfully!\nOutput file: ${result}`;
         } catch (error) {
-          output.textContent += `\n❌ Debug Error: ${error.message}\n`;
-          output.scrollTop = output.scrollHeight;
+          output.textContent += `\n❌ Error: ${error.message}`;
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "🎬 Generate Workout Video";
+
+          // Hide progress container after a delay
+          setTimeout(() => {
+            progressContainer.style.display = "none";
+          }, 3000);
+
+          // Clean up listeners
+          window.api.removeGenerationProgress();
+          window.api.removeConsoleLog();
         }
+      }
+
+      // Event listeners
+      document.addEventListener("DOMContentLoaded", () => {
+        populateDropdowns();
+        loadCategories();
+
+        // Reload equipment when categories change
+        document.addEventListener("change", (event) => {
+          if (event.target.name === "categories") {
+            loadEquipment();
+          }
+        });
+
+        // Form submission
+        document
+          .getElementById("workoutForm")
+          .addEventListener("submit", handleSubmit);
+
+        // Debug button
+        document
+          .getElementById("debugBtn")
+          .addEventListener("click", async () => {
+            const output = document.getElementById("output");
+            output.textContent = "🔧 Debugging FFmpeg installation...\n";
+
+            try {
+              const debugInfo = await window.api.debugFfmpeg();
+              output.textContent += `\n📋 FFmpeg Debug Information:\n`;
+              output.textContent += `Path: ${debugInfo.ffmpegPath}\n`;
+              output.textContent += `Exists: ${
+                debugInfo.exists ? "✅ Yes" : "❌ No"
+              }\n`;
+              output.textContent += `Resources Path: ${debugInfo.resourcesPath}\n`;
+              output.textContent += `Current Directory: ${debugInfo.currentDir}\n`;
+              output.textContent += `Development Mode: ${
+                debugInfo.isDev ? "Yes" : "No"
+              }\n`;
+              output.textContent += `Platform: ${debugInfo.platform}\n`;
+              output.textContent += `Architecture: ${debugInfo.arch}\n`;
+
+              if (debugInfo.version) {
+                output.textContent += `Version: ${debugInfo.version}\n`;
+              } else if (debugInfo.versionError) {
+                output.textContent += `Version Error: ${debugInfo.versionError}\n`;
+              }
+
+              output.scrollTop = output.scrollHeight;
+            } catch (error) {
+              output.textContent += `\n❌ Debug Error: ${error.message}\n`;
+              output.scrollTop = output.scrollHeight;
+            }
+          });
       });
-    });
-  </script>
-</body>
+    </script>
+  </body>
 </html>

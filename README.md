@@ -1,10 +1,29 @@
-# 💪 Workout Generator 🏋️
+# 💪 Wurqit: Workout Video Generator 🏋️
 
-Generates a workout based on your inputs
+![Icon](media/icon/apple.png)
 
-![Run](run.png)
+Wurqit is your ultimate desktop workout video generator — built for fitness enthusiasts who want total control over their routines without the hassle.
 
-![Demo](demo.gif)
+Available on macOS, Windows, and Linux, Wurqit lets you create fully customized workout videos using a powerful, built-in library of over 800 high-quality exercise clips. Whether you're training for strength, cardio, or core — with dumbbells, resistance bands, or just bodyweight — Wurqit adapts to you.
+
+Just set your:
+
+    ✅ Work and rest intervals
+    ✅ Time between stations
+    ✅ Sets per station
+    ✅ Total workout duration
+    ✅ Equipment on hand
+    ✅ Preferred training style
+
+…and Wurqit automatically generates a custom video workout that looks great and feels like it was made just for you.
+
+No subscriptions. No setup. No internet required. Just launch the app and start moving.
+
+![User interface](app.png)
+
+# Quick start
+
+Download the installer for your operating system from the releases tab in this repo. After downloading it to your computer, run the installer to install it on your computer.
 
 # Options available
 
@@ -16,37 +35,53 @@ Generates a workout based on your inputs
 6. Type of workout (e.g. strength,cardio)
 7. Equipment (e.g. kettlebell,dumbell,bands)
 
-# Requirements
+# Developers guide
 
-Must be on a \*nix
+## Introduction
 
-The script requires the following software to be installed on the host OS:
+This is an Electron desktop application. All dependencies are bundled with the application, so the end user doesn't need to install additional software (such as FFmpeg) or provide exercise videos.
 
-1. FFmpeg – for video and audio processing (used extensively throughout the script).
-2. ffprobe – for getting video duration (part of the FFmpeg suite).
-3. awk, sed, basename, find, mktemp, cat, rm – standard Unix command-line utilities (usually pre-installed on macOS and Linux).
+## File/folder structure of important files/folders
 
-If you are running on macOS or Linux, you mainly need to ensure FFmpeg (which includes ffprobe) is installed.
+```
+ - workout-generator
+    - media
+        - audio     | contains audio for exercise videos
+        - icon      | contains icon files for the app
+        - videos    | contains all the exercise videos
+    - tests         | contains tests for the main app code
+    - .env          | the environment variables used for builds
+    - generator.js  | the main JS for generating the videos
+    - index.html    | the UI of the app
+    - main.js       | the entry point of the app
+    - notarize.js   | used to notarize the app for release
+    - package.json  | npm packages file, contains build config too
+    - preload.js    | used to preload all the IPC code
+```
 
-# Setup
+## Run it locally
 
-Install FFmpeg if you don't already have it
+Run the following commands
 
-- macOS: `brew install ffmpeg`
-- Ubuntu/Debian: `sudo apt install ffmpeg`
-- CentOS/RHEL: `sudo yum install ffmpeg`
+`yarn install`
 
-Make sure `generate.sh` is executable, run `chmod +x generate.sh`.
+`yarn start`
 
-# How to use
+## Build for release
 
-Run the following command in the terminal, from the repo directory:
+You will need to create an `.env` file in the root of the repo with the following contents
 
-`generate.sh`
+```
+APPLE_APP_SPECIFIC_PASSWORD=...
+APPLE_TEAM_ID=...
+APPLE_ID=...
+```
 
-Follow the prompts to customise your workout.
+Provide your own values in place of `...`
 
-Once done, a new MP4 video will be saved for you.
+Then run
+
+`yarn build`
 
 # Excercise data source
 

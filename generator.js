@@ -3,58 +3,79 @@ const path = require("path");
 const { spawn } = require("child_process");
 const ffmpeg = require("ffmpeg-static");
 const os = require("os");
-const { app } = require("electron");
 
 // Function to get the correct FFmpeg path for both dev and production
 function getFfmpegPath() {
   // In development, ffmpeg-static returns the path directly
-  if (!process.mainModule || process.mainModule.filename.indexOf("app.asar") === -1) {
-    console.log(`[DEBUG] Development mode - using ffmpeg-static path: ${ffmpeg}`);
+  if (
+    !process.mainModule ||
+    process.mainModule.filename.indexOf("app.asar") === -1
+  ) {
+    console.log(
+      `[DEBUG] Development mode - using ffmpeg-static path: ${ffmpeg}`
+    );
     return ffmpeg;
   }
-  
+
   // In production (packaged app), we need to look in the unpacked resources
   const platform = os.platform();
   const arch = os.arch();
-  
+
   console.log(`[DEBUG] Production mode - Platform: ${platform}, Arch: ${arch}`);
   console.log(`[DEBUG] Resources path: ${process.resourcesPath}`);
   console.log(`[DEBUG] Current directory: ${__dirname}`);
-  
+
   // Determine the correct binary name for the platform
-  let binaryName = 'ffmpeg';
-  if (platform === 'win32') {
-    binaryName = 'ffmpeg.exe';
-  } else if (platform === 'darwin') {
-    binaryName = 'ffmpeg';
-  } else if (platform === 'linux') {
-    binaryName = 'ffmpeg';
+  let binaryName = "ffmpeg";
+  if (platform === "win32") {
+    binaryName = "ffmpeg.exe";
+  } else if (platform === "darwin") {
+    binaryName = "ffmpeg";
+  } else if (platform === "linux") {
+    binaryName = "ffmpeg";
   }
-  
+
   console.log(`[DEBUG] Looking for binary: ${binaryName}`);
-  
+
   // Try to find the binary in the unpacked resources
   const possiblePaths = [
-    path.join(process.resourcesPath, 'app.asar.unpacked', 'node_modules', 'ffmpeg-static', binaryName),
-    path.join(process.resourcesPath, 'app.asar.unpacked', 'ffmpeg', binaryName),
-    path.join(__dirname, '..', 'app.asar.unpacked', 'node_modules', 'ffmpeg-static', binaryName),
-    path.join(__dirname, '..', 'app.asar.unpacked', 'ffmpeg', binaryName),
+    path.join(
+      process.resourcesPath,
+      "app.asar.unpacked",
+      "node_modules",
+      "ffmpeg-static",
+      binaryName
+    ),
+    path.join(process.resourcesPath, "app.asar.unpacked", "ffmpeg", binaryName),
+    path.join(
+      __dirname,
+      "..",
+      "app.asar.unpacked",
+      "node_modules",
+      "ffmpeg-static",
+      binaryName
+    ),
+    path.join(__dirname, "..", "app.asar.unpacked", "ffmpeg", binaryName),
     // Fallback to the original ffmpeg-static path
-    ffmpeg
+    ffmpeg,
   ];
-  
+
   console.log(`[DEBUG] Checking possible paths:`);
   for (let i = 0; i < possiblePaths.length; i++) {
     const ffmpegPath = possiblePaths[i];
     const exists = fs.existsSync(ffmpegPath);
-    console.log(`[DEBUG] ${i + 1}. ${ffmpegPath} - ${exists ? 'EXISTS' : 'NOT FOUND'}`);
+    console.log(
+      `[DEBUG] ${i + 1}. ${ffmpegPath} - ${exists ? "EXISTS" : "NOT FOUND"}`
+    );
     if (exists) {
       console.log(`[DEBUG] Found FFmpeg at: ${ffmpegPath}`);
       return ffmpegPath;
     }
   }
-  
-  console.log(`[DEBUG] FFmpeg not found in any expected location, using fallback: ${ffmpeg}`);
+
+  console.log(
+    `[DEBUG] FFmpeg not found in any expected location, using fallback: ${ffmpeg}`
+  );
   // If we can't find it, return the original path and let it fail with a better error
   return ffmpeg;
 }
@@ -73,7 +94,7 @@ function printStatus(message, consoleCallback = null) {
   const formattedMessage = `[INFO] ${message}`;
   console.log(`${colors.GREEN}[INFO]${colors.NC} ${message}`);
   if (consoleCallback) {
-    consoleCallback('info', message);
+    consoleCallback("info", message);
   }
 }
 
@@ -81,7 +102,7 @@ function printWarning(message, consoleCallback = null) {
   const formattedMessage = `[WARNING] ${message}`;
   console.log(`${colors.YELLOW}[WARNING]${colors.NC} ${message}`);
   if (consoleCallback) {
-    consoleCallback('warn', message);
+    consoleCallback("warn", message);
   }
 }
 
@@ -89,7 +110,7 @@ function printError(message, consoleCallback = null) {
   const formattedMessage = `[ERROR] ${message}`;
   console.log(`${colors.RED}[ERROR]${colors.NC} ${message}`);
   if (consoleCallback) {
-    consoleCallback('error', message);
+    consoleCallback("error", message);
   }
 }
 
@@ -153,20 +174,23 @@ function getDesktopPath() {
 // Function to check if FFMPEG is available
 function checkFfmpeg(consoleCallback = null) {
   const ffmpegPath = getFfmpegPath();
-  
+
   if (!ffmpegPath) {
     throw new Error(
       "FFMPEG is not available. Please ensure ffmpeg-static is properly installed."
     );
   }
-  
+
   if (!fs.existsSync(ffmpegPath)) {
     throw new Error(
       `FFMPEG executable not found at: ${ffmpegPath}. Please ensure ffmpeg-static is properly installed and unpacked.`
     );
   }
-  
-  printStatus(`FFMPEG is available and ready to use at: ${ffmpegPath}`, consoleCallback);
+
+  printStatus(
+    `FFMPEG is available and ready to use at: ${ffmpegPath}`,
+    consoleCallback
+  );
 }
 
 function getBaseDir() {
@@ -477,8 +501,16 @@ function createProgressGridOverlay(
 }
 
 // Function to create countdown video segment
-async function createCountdownSegment(duration, text, outputFile, consoleCallback = null) {
-  printStatus(`Creating countdown segment: ${text} (${duration}s)`, consoleCallback);
+async function createCountdownSegment(
+  duration,
+  text,
+  outputFile,
+  consoleCallback = null
+) {
+  printStatus(
+    `Creating countdown segment: ${text} (${duration}s)`,
+    consoleCallback
+  );
 
   // Check if BEEP.mp3 exists
   const beepFile = path.join(getBaseMediaDir(), "audio", "BEEP.mp3");
@@ -527,7 +559,10 @@ async function createCountdownSegment(duration, text, outputFile, consoleCallbac
     printStatus(`Countdown segment created: ${outputFile}`, consoleCallback);
     return true;
   } catch (error) {
-    printError(`Failed to create countdown segment: ${outputFile}`, consoleCallback);
+    printError(
+      `Failed to create countdown segment: ${outputFile}`,
+      consoleCallback
+    );
     printError(error.message, consoleCallback);
     return false;
   }
@@ -613,7 +648,10 @@ async function createExerciseSegment(
     printStatus(`Exercise segment created: ${outputFile}`, consoleCallback);
     return true;
   } catch (error) {
-    printError(`Failed to create exercise segment: ${outputFile}`, consoleCallback);
+    printError(
+      `Failed to create exercise segment: ${outputFile}`,
+      consoleCallback
+    );
     printError(error.message, consoleCallback);
     return false;
   }
@@ -635,7 +673,10 @@ async function createStationChangeSegment(
 
   // Check if video file exists
   if (!fs.existsSync(nextExerciseFile)) {
-    printError(`Next exercise video not found: ${nextExerciseFile}`, consoleCallback);
+    printError(
+      `Next exercise video not found: ${nextExerciseFile}`,
+      consoleCallback
+    );
     return false;
   }
 
@@ -684,10 +725,16 @@ async function createStationChangeSegment(
       throw new Error(`Station change segment file not created: ${outputFile}`);
     }
 
-    printStatus(`Station change segment created: ${outputFile}`, consoleCallback);
+    printStatus(
+      `Station change segment created: ${outputFile}`,
+      consoleCallback
+    );
     return true;
   } catch (error) {
-    printError(`Failed to create station change segment: ${outputFile}`, consoleCallback);
+    printError(
+      `Failed to create station change segment: ${outputFile}`,
+      consoleCallback
+    );
     printError(error.message, consoleCallback);
     return false;
   }
@@ -719,10 +766,19 @@ function selectExercisesEvenly(
 
   // Output debug info
   if (consoleCallback) {
-    consoleCallback('info', `Distributing ${maxExercises} exercises across ${selectedEquipment.length} equipment types`);
-    consoleCallback('info', `Base exercises per equipment: ${exercisesPerEquipment}`);
+    consoleCallback(
+      "info",
+      `Distributing ${maxExercises} exercises across ${selectedEquipment.length} equipment types`
+    );
+    consoleCallback(
+      "info",
+      `Base exercises per equipment: ${exercisesPerEquipment}`
+    );
     if (remainingExercises > 0) {
-      consoleCallback('info', `Extra exercises to distribute: ${remainingExercises}`);
+      consoleCallback(
+        "info",
+        `Extra exercises to distribute: ${remainingExercises}`
+      );
     }
   }
 
@@ -764,7 +820,10 @@ function selectExercisesEvenly(
     }
 
     if (consoleCallback) {
-      consoleCallback('info', `Selected ${selectedFromEquip} exercises from '${equip}'`);
+      consoleCallback(
+        "info",
+        `Selected ${selectedFromEquip} exercises from '${equip}'`
+      );
     }
   }
 
@@ -796,14 +855,14 @@ async function generateWorkoutVideo(
   const logToBoth = (message) => {
     console.log(message);
     if (consoleCallback) {
-      consoleCallback('info', message.replace(/\x1b\[[0-9;]*m/g, '')); // Remove ANSI color codes
+      consoleCallback("info", message.replace(/\x1b\[[0-9;]*m/g, "")); // Remove ANSI color codes
     }
   };
 
   logToBoth(`${colors.BLUE}================================${colors.NC}`);
   logToBoth(`${colors.BLUE}    WORKOUT VIDEO GENERATOR    ${colors.NC}`);
   logToBoth(`${colors.BLUE}================================${colors.NC}`);
-  logToBoth('');
+  logToBoth("");
 
   try {
     // Check FFMPEG installation
@@ -851,7 +910,7 @@ async function generateWorkoutVideo(
     logToBoth(`  Sets per station: ${setsPerStation}`);
     logToBoth(`  Station rest time: ${stationRest}s`);
     logToBoth(`  Total workout duration: ${totalWorkoutDuration} minutes`);
-    logToBoth('');
+    logToBoth("");
 
     // Update progress
     if (progressCallback) {
@@ -1056,7 +1115,10 @@ async function generateWorkoutVideo(
     await runFfmpeg(concatArgs);
 
     if (fs.existsSync(outputFile)) {
-      printStatus(`Workout video created successfully: ${outputFile}`, consoleCallback);
+      printStatus(
+        `Workout video created successfully: ${outputFile}`,
+        consoleCallback
+      );
 
       // Update progress
       if (progressCallback) {
@@ -1076,7 +1138,10 @@ async function generateWorkoutVideo(
         ];
         const duration = await runFfmpeg(durationArgs);
         if (duration.trim()) {
-          printStatus(`Video duration: ${duration.trim()} seconds`, consoleCallback);
+          printStatus(
+            `Video duration: ${duration.trim()} seconds`,
+            consoleCallback
+          );
         }
       } catch (error) {
         printWarning("Could not determine video duration", consoleCallback);
@@ -1099,7 +1164,7 @@ async function generateWorkoutVideo(
       progressCallback(100, "Workout video generation complete!");
     }
 
-    logToBoth('');
+    logToBoth("");
     printStatus("Workout video generation complete!", consoleCallback);
     logToBoth(`Output file: ${outputFile}`);
 

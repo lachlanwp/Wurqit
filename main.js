@@ -1,14 +1,12 @@
 const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
 const { spawn } = require("child_process");
-const ffmpegPath = require("ffmpeg-static");
 const {
   getCategories,
   getEquipment,
   getDesktopPath,
   generateWorkoutVideo,
   getFfmpegPath,
-  checkFfmpeg,
 } = require("./generator");
 const isDev = require("electron-is-dev");
 const nativeImage = require("electron").nativeImage;
@@ -21,7 +19,7 @@ function createWindow() {
       contextIsolation: true,
       preload: path.join(__dirname, "preload.js"),
     },
-    icon: nativeImage.createFromPath(__dirname + "/media/icon/icon.png"),
+    icon: nativeImage.createFromPath(__dirname + "/media/icon/windows.png"),
   });
 
   win.loadFile("index.html");
@@ -154,14 +152,14 @@ ipcMain.handle("debug-ffmpeg", async () => {
     const ffmpegPath = getFfmpegPath();
     const debugInfo = {
       ffmpegPath: ffmpegPath,
-      exists: require('fs').existsSync(ffmpegPath),
+      exists: require("fs").existsSync(ffmpegPath),
       resourcesPath: process.resourcesPath,
       currentDir: __dirname,
       isDev: isDev,
-      platform: require('os').platform(),
-      arch: require('os').arch()
+      platform: require("os").platform(),
+      arch: require("os").arch(),
     };
-    
+
     // Try to run FFmpeg version command
     try {
       const { spawn } = require("child_process");
@@ -172,7 +170,7 @@ ipcMain.handle("debug-ffmpeg", async () => {
         ffmpegProcess.stderr.on("data", (data) => (output += data));
         ffmpegProcess.on("close", (code) => {
           if (code === 0) {
-            resolve(output.split('\n')[0]); // First line contains version info
+            resolve(output.split("\n")[0]); // First line contains version info
           } else {
             reject(new Error(`FFmpeg exited with code ${code}`));
           }
@@ -183,7 +181,7 @@ ipcMain.handle("debug-ffmpeg", async () => {
     } catch (error) {
       debugInfo.versionError = error.message;
     }
-    
+
     return debugInfo;
   } catch (error) {
     throw new Error(`Failed to debug FFmpeg: ${error.message}`);
