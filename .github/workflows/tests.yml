@@ -29,10 +29,10 @@ jobs:
         cache: 'npm'
     
     - name: Install dependencies
-      run: npm ci
+      run: yarn install
     
     - name: Run tests with coverage
-      run: npm test -- --coverage
+      run: yarn test -- --coverage
     
     - name: List coverage directory
       run: ls -R coverage || echo "No coverage directory"
