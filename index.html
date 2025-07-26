@@ -30,6 +30,10 @@
       margin: 0 auto;
       padding: 20px;
       background-color: #f5f5f5;
+      user-select: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+      -moz-user-select: none;
     }
     
     .container {
@@ -282,6 +286,10 @@
   </div>
 
   <script>
+    // Disable right-click context menu
+    document.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+    });
     // Populate dropdown options
     function populateDropdowns() {
       // Work duration: 20-120 seconds in 5-second increments

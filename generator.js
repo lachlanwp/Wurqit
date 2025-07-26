@@ -94,15 +94,61 @@ function checkFfmpeg() {
   printStatus("FFMPEG is available and ready to use.");
 }
 
-function getVideosDir() {
-  // If running in Electron, use app.getAppPath(), otherwise use __dirname
+function getBaseDir() {
   let baseDir;
   try {
-    baseDir = app && app.getAppPath ? app.getAppPath() : __dirname;
+    if (
+      process.mainModule &&
+      process.mainModule.filename.indexOf("app.asar") !== -1
+    ) {
+      // Running from asar, use resourcesPath
+      baseDir = process.resourcesPath;
+    } else {
+      // Dev mode
+      baseDir = __dirname;
+    }
   } catch {
     baseDir = __dirname;
   }
-  return path.join(baseDir, "media/videos");
+  return baseDir;
+}
+
+function getBaseMediaDir() {
+  let baseDir;
+  try {
+    if (
+      process.mainModule &&
+      process.mainModule.filename.indexOf("app.asar") !== -1
+    ) {
+      // Running from asar, use resourcesPath
+      baseDir = path.join(getBaseDir(), "app.asar.unpacked", "media");
+    } else {
+      // Dev mode
+      baseDir = path.join(getBaseDir(), "media");
+    }
+  } catch {
+    baseDir = path.join(getBaseDir(), "media");
+  }
+  return baseDir;
+}
+
+function getVideosDir() {
+  let baseDir;
+  try {
+    if (
+      process.mainModule &&
+      process.mainModule.filename.indexOf("app.asar") !== -1
+    ) {
+      // Running from asar, use resourcesPath
+      baseDir = path.join(getBaseMediaDir(), "videos");
+    } else {
+      // Dev mode
+      baseDir = path.join(getBaseMediaDir(), "videos");
+    }
+  } catch {
+    baseDir = path.join(getBaseMediaDir(), "videos");
+  }
+  return baseDir;
 }
 
 // Function to get all category names (subfolders in videos/)
@@ -359,7 +405,7 @@ async function createCountdownSegment(duration, text, outputFile) {
   printStatus(`Creating countdown segment: ${text} (${duration}s)`);
 
   // Check if BEEP.mp3 exists
-  const beepFile = path.join(__dirname, "..", "media", "BEEP.mp3");
+  const beepFile = path.join(getBaseMediaDir(), "audio", "BEEP.mp3");
 
   // Choose background color based on text
   let bgColor = "black";
@@ -437,7 +483,7 @@ async function createExerciseSegment(
   const exerciseName = formatExerciseName(videoFile);
 
   // Check if BEEP.mp3 exists
-  const beepFile = path.join(__dirname, "..", "media", "BEEP.mp3");
+  const beepFile = path.join(getBaseMediaDir(), "audio", "BEEP.mp3");
 
   // Create progress grid overlay
   const gridOverlay = createProgressGridOverlay(
@@ -517,7 +563,7 @@ async function createStationChangeSegment(
   const nextExerciseName = formatExerciseName(nextExerciseFile);
 
   // Check if BEEP.mp3 exists
-  const beepFile = path.join(__dirname, "..", "media", "BEEP.mp3");
+  const beepFile = path.join(getBaseMediaDir(), "audio", "BEEP.mp3");
 
   // Create station change video with preview of next exercise
   const args = [
@@ -775,8 +821,8 @@ async function generateWorkoutVideo(
       progressCallback(20, "Creating temporary directory...");
     }
 
-    // Create temporary directory for video segments
-    const tempDir = path.join(__dirname, "temp_" + Date.now());
+    // Create temporary directory for video segments using OS temp dir
+    const tempDir = path.join(os.tmpdir(), "workoutgen_temp_" + Date.now());
     fs.mkdirSync(tempDir, { recursive: true });
     printStatus(`Creating temporary directory: ${tempDir}`);
 
