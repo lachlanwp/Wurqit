@@ -4,6 +4,12 @@
     <img src="media/icon/apple.png" alt="Description" width="200px" style="max-width:100%; height:auto;" /> 
 </div>
 
+<div align="center">
+    <a href="https://github.com/lachlanpearce/Wurqit/actions/workflows/test-simple.yml">
+        <img src="https://github.com/lachlanpearce/Wurqit/actions/workflows/test-simple.yml/badge.svg" alt="Tests" />
+    </a>
+</div>
+
 Wurqit is your ultimate desktop workout video generator — built for fitness enthusiasts who want total control over their routines without the hassle.
 
 Available on macOS, Windows, and Linux, Wurqit lets you create fully customized workout videos using a powerful, built-in library of over 800 high-quality exercise clips. Whether you're training for strength, cardio, or core — with dumbbells, resistance bands, or just bodyweight — Wurqit adapts to you.
@@ -91,6 +97,17 @@ npm test -- --coverage
 ```
 
 See the [tests/README.md](tests/README.md) for detailed testing information.
+
+## Continuous Integration
+
+This project uses GitHub Actions for continuous integration:
+
+- **Tests**: Automatically runs on every push to `main` and pull request
+- **Node.js Versions**: Tests against Node.js 18.x and 20.x
+- **Coverage**: Generates coverage reports for each test run
+- **Artifacts**: Coverage reports are saved as build artifacts
+
+The test badge above shows the status of the latest test run on the main branch.
 
 ## Build for release
 
