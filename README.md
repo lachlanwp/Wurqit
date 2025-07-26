@@ -6,7 +6,7 @@
 
 <div align="center">
     <a href="https://github.com/lachlanpearce/Wurqit/actions/workflows/test-simple.yml">
-        <img src="https://github.com/lachlanpearce/Wurqit/actions/workflows/test-simple.yml/badge.svg" alt="Tests" />
+        <img src="https://github.com/lachlanpearce/Wurqit/actions/workflows/test-simple.yml/badge.svg?branch=main&event=push" alt="Tests" />
     </a>
 </div>
 
@@ -107,7 +107,7 @@ This project uses GitHub Actions for continuous integration:
 - **Coverage**: Generates coverage reports for each test run
 - **Artifacts**: Coverage reports are saved as build artifacts
 
-The test badge above shows the status of the latest test run on the main branch.
+The test badge above shows the status of the latest test run on the main branch. The badge will appear after the first push to the main branch triggers the GitHub Actions workflow.
 
 ## Build for release
 
