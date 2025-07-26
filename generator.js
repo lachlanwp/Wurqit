@@ -4,6 +4,32 @@ const { spawn } = require("child_process");
 const ffmpeg = require("ffmpeg-static");
 const os = require("os");
 
+// Add memory management and caching
+let categoriesCache = null;
+let equipmentCache = new Map();
+let videoFilesCache = new Map();
+
+// Function to clear caches when memory usage is high
+function clearCachesIfNeeded() {
+  const memUsage = process.memoryUsage();
+  const heapUsedMB = memUsage.heapUsed / 1024 / 1024;
+
+  if (heapUsedMB > 500) {
+    // Clear caches if heap usage > 500MB
+    console.log(
+      `[DEBUG] High memory usage (${heapUsedMB.toFixed(2)}MB), clearing caches`
+    );
+    categoriesCache = null;
+    equipmentCache.clear();
+    videoFilesCache.clear();
+
+    // Force garbage collection if available
+    if (global.gc) {
+      global.gc();
+    }
+  }
+}
+
 // Function to get the correct FFmpeg path for both dev and production
 function getFfmpegPath() {
   // In development, ffmpeg-static returns the path directly
@@ -40,16 +66,23 @@ function getFfmpegPath() {
   // Try to find the binary in the unpacked resources
   const possiblePaths = [
     // Only try process.resourcesPath if it exists
-    ...(process.resourcesPath ? [
-      path.join(
-        process.resourcesPath,
-        "app.asar.unpacked",
-        "node_modules",
-        "ffmpeg-static",
-        binaryName
-      ),
-      path.join(process.resourcesPath, "app.asar.unpacked", "ffmpeg", binaryName)
-    ] : []),
+    ...(process.resourcesPath
+      ? [
+          path.join(
+            process.resourcesPath,
+            "app.asar.unpacked",
+            "node_modules",
+            "ffmpeg-static",
+            binaryName
+          ),
+          path.join(
+            process.resourcesPath,
+            "app.asar.unpacked",
+            "ffmpeg",
+            binaryName
+          ),
+        ]
+      : []),
     path.join(
       __dirname,
       "..",
@@ -262,6 +295,14 @@ function getVideosDir() {
 
 // Function to get all category names (subfolders in videos/)
 function getCategories() {
+  // Check cache first
+  if (categoriesCache) {
+    return categoriesCache;
+  }
+
+  // Clear caches if memory usage is high
+  clearCachesIfNeeded();
+
   const videosDir = getVideosDir();
 
   if (!fs.existsSync(videosDir)) {
@@ -278,11 +319,24 @@ function getCategories() {
     }
   }
 
+  // Cache the result
+  categoriesCache = categories;
   return categories;
 }
 
 // Function to get all equipment names for given categories
 function getEquipment(categories) {
+  // Create cache key from categories
+  const cacheKey = categories.sort().join(",");
+
+  // Check cache first
+  if (equipmentCache.has(cacheKey)) {
+    return equipmentCache.get(cacheKey);
+  }
+
+  // Clear caches if memory usage is high
+  clearCachesIfNeeded();
+
   const videosDir = getVideosDir();
   const equipmentSet = new Set();
 
@@ -304,16 +358,35 @@ function getEquipment(categories) {
         }
       } catch (error) {
         // Skip categories that can't be read
-        console.warn(`Could not read directory ${categoryDir}: ${error.message}`);
+        console.warn(
+          `Could not read directory ${categoryDir}: ${error.message}`
+        );
       }
     }
   }
 
-  return Array.from(equipmentSet);
+  const equipment = Array.from(equipmentSet);
+
+  // Cache the result
+  equipmentCache.set(cacheKey, equipment);
+  return equipment;
 }
 
 // Function to get exercise videos grouped by equipment type
 function getExerciseVideosByEquipment(categories, equipment) {
+  // Create cache key from categories and equipment
+  const cacheKey = `${categories.sort().join(",")}|${equipment
+    .sort()
+    .join(",")}`;
+
+  // Check cache first
+  if (videoFilesCache.has(cacheKey)) {
+    return videoFilesCache.get(cacheKey);
+  }
+
+  // Clear caches if memory usage is high
+  clearCachesIfNeeded();
+
   const videosDir = getVideosDir();
   const equipmentVideos = {};
 
@@ -332,12 +405,16 @@ function getExerciseVideosByEquipment(categories, equipment) {
           }
         } catch (error) {
           // Skip equipment directories that can't be read
-          console.warn(`Could not read directory ${equipDir}: ${error.message}`);
+          console.warn(
+            `Could not read directory ${equipDir}: ${error.message}`
+          );
         }
       }
     }
   }
 
+  // Cache the result
+  videoFilesCache.set(cacheKey, equipmentVideos);
   return equipmentVideos;
 }
 

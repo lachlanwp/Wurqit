@@ -11,6 +11,22 @@ const {
 const isDev = require("electron-is-dev");
 const nativeImage = require("electron").nativeImage;
 
+// Add crash prevention and memory management
+app.commandLine.appendSwitch("--max-old-space-size", "4096");
+app.commandLine.appendSwitch("--disable-gpu-sandbox");
+app.commandLine.appendSwitch("--no-sandbox");
+
+// Handle uncaught exceptions
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught Exception:", error);
+  // Don't exit immediately, let the app handle it gracefully
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Unhandled Rejection at:", promise, "reason:", reason);
+  // Don't exit immediately, let the app handle it gracefully
+});
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1000,
@@ -18,8 +34,26 @@ function createWindow() {
     webPreferences: {
       contextIsolation: true,
       preload: path.join(__dirname, "preload.js"),
+      nodeIntegration: false,
+      enableRemoteModule: false,
+      // Add memory management for renderer process
+      backgroundThrottling: false,
     },
     icon: nativeImage.createFromPath(__dirname + "/media/icon/windows.png"),
+    // Add crash prevention
+    show: false, // Don't show until ready
+  });
+
+  // Show window when ready to prevent visual glitches
+  win.once("ready-to-show", () => {
+    win.show();
+  });
+
+  // Handle window crashes
+  win.webContents.on("crashed", (event, killed) => {
+    console.error("Renderer process crashed:", { killed });
+    // Reload the window instead of crashing the entire app
+    win.reload();
   });
 
   win.loadFile("index.html");

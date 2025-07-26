@@ -4,6 +4,7 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
+    "test-start": "electron test-build.js",
     "build": "dotenv electron-builder",
     "test": "jest",
     "test:watch": "jest --watch"
@@ -12,7 +13,7 @@
     "@babel/preset-env": "^7.28.0",
     "@electron/notarize": "^2.2.0",
     "dotenv-cli": "^4.0.0",
-    "electron": "^30.0.0",
+    "electron": "^28.2.0",
     "electron-builder": "^26.0.12",
     "jest": "^30.0.5"
   },
