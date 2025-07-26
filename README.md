@@ -21,7 +21,7 @@ Just set your:
 
 No subscriptions. No setup. No internet required. Just launch the app and start moving.
 
-![User interface](app.png)
+![User interface](screenshot.png)
 
 # Quick start
 
