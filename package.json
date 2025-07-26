@@ -25,15 +25,15 @@
     "productName": "Wurqit",
     "files": [
       "**/*",
-      "!media/**/*"
+      "!media/videos/**/*"
     ],
     "asarUnpack": [
       "node_modules/ffmpeg-static/**"
     ],
     "extraResources": [
       {
-        "from": "media",
-        "to": "app.asar.unpacked/media",
+        "from": "media/videos",
+        "to": "app.asar.unpacked/media/videos",
         "filter": [
           "**/*"
         ]
