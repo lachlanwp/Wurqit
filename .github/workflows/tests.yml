@@ -29,21 +29,28 @@ jobs:
     - name: Run tests with coverage
       run: npm test -- --coverage
     
+    - name: List coverage directory
+      run: ls -R coverage || echo "No coverage directory"
+    
     - name: Extract coverage percent
       run: |
-        node <<'EOF'
-        const fs = require('fs');
-        const summary = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf-8'));
-        const pct = summary.total.statements.pct;
-        const badge = {
-          schemaVersion: 1,
-          label: "coverage",
-          message: `${pct}%`,
-          color: pct > 90 ? "brightgreen" : pct > 75 ? "yellow" : "red"
-        };
-        fs.mkdirSync('.badge', { recursive: true });
-        fs.writeFileSync('.badge/coverage.json', JSON.stringify(badge));
-        EOF
+        if [ -f coverage/coverage-summary.json ]; then
+          node <<'EOF'
+          const fs = require('fs');
+          const summary = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf-8'));
+          const pct = summary.total.statements.pct;
+          const badge = {
+            schemaVersion: 1,
+            label: "coverage",
+            message: `${pct}%`,
+            color: pct > 90 ? "brightgreen" : pct > 75 ? "yellow" : "red"
+          };
+          fs.mkdirSync('.badge', { recursive: true });
+          fs.writeFileSync('.badge/coverage.json', JSON.stringify(badge));
+          EOF
+        else
+          echo "No coverage summary found, skipping badge generation."
+        fi
 
     - name: Upload badge to `gh-pages`
       uses: peaceiris/actions-gh-pages@v4
