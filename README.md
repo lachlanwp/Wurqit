@@ -1,6 +1,8 @@
 # 💪 Wurqit: Workout Video Generator 🏋️
 
-![Icon](media/icon/apple.png)
+<center>
+    <img src="media/icon/apple.png" alt="Description" width="200px" style="max-width:100%; height:auto;" /> 
+</center>
 
 Wurqit is your ultimate desktop workout video generator — built for fitness enthusiasts who want total control over their routines without the hassle.
 
@@ -83,6 +85,6 @@ Then run
 
 `yarn build`
 
-# Excercise data source
+# Exercise data source
 
 https://github.com/yuhonas/free-exercise-db
