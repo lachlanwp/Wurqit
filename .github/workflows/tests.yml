@@ -59,28 +59,13 @@ jobs:
           
           # Create badge JSON
           mkdir -p .badge
-          cat > .badge/coverage.json << EOF
-          {
-            "schemaVersion": 1,
-            "label": "coverage",
-            "message": "${PCT}%",
-            "color": "${COLOR}",
-            "namedLogo": "jest"
-          }
-          EOF
+          echo '{"schemaVersion": 1, "label": "coverage", "message": "'$PCT'%", "color": "'$COLOR'", "namedLogo": "jest"}' > .badge/coverage.json
           
           echo "Generated coverage badge: ${PCT}% (${COLOR})"
         else
           echo 'No coverage summary found, creating default badge.'
           mkdir -p .badge
-          cat > .badge/coverage.json << EOF
-          {
-            "schemaVersion": 1,
-            "label": "coverage",
-            "message": "unknown",
-            "color": "lightgrey"
-          }
-          EOF
+          echo '{"schemaVersion": 1, "label": "coverage", "message": "unknown", "color": "lightgrey"}' > .badge/coverage.json
         fi
 
     - name: Deploy to GitHub Pages
