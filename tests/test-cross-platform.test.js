@@ -1,10 +1,10 @@
 const { getDesktopPath } = require('../generator');
-const os = require('os');
-const path = require('path');
 
 // Patch getDesktopPath for CI environments
 jest.mock('../generator', () => {
   const original = jest.requireActual('../generator');
+  const os = require('os');
+  const path = require('path');
   return {
     ...original,
     getDesktopPath: () => {
