@@ -4,9 +4,7 @@
     <img src="media/icon/apple.png" alt="Description" width="200px" style="max-width:100%; height:auto;" /> 
 </div>
 
-<div align="center">
-    ![Test Simple](https://github.com/lachlanwp/wurqit/actions/workflows/test-simple.yml/badge.svg)
-</div>
+![Tests](https://github.com/lachlanwp/wurqit/actions/workflows/test-simple.yml/badge.svg)
 
 Wurqit is your ultimate desktop workout video generator — built for fitness enthusiasts who want total control over their routines without the hassle.
 
