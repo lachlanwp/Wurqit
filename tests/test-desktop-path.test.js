@@ -3,6 +3,21 @@ const os = require('os');
 const fs = require('fs');
 const path = require('path');
 
+// Patch getDesktopPath for CI environments
+jest.mock('../generator', () => {
+  const original = jest.requireActual('../generator');
+  return {
+    ...original,
+    getDesktopPath: () => {
+      if (process.env.CI) {
+        // Use a temp dir in CI
+        return path.join(os.tmpdir(), 'wurqit-desktop-test');
+      }
+      return original.getDesktopPath();
+    }
+  };
+});
+
 describe('Desktop Path Functionality', () => {
   let originalPlatform;
   let originalHomedir;
