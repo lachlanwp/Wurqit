@@ -271,6 +271,9 @@
       <button type="submit" class="submit-btn" id="submitBtn">
         🎬 Generate Workout Video
       </button>
+      <!-- <button type="button" class="submit-btn" id="debugBtn" style="margin-left: 10px; background-color: #6c757d;">
+        🔧 Debug FFmpeg
+      </button> -->
     </form>
     
     <!-- Progress Container -->
@@ -517,6 +520,26 @@
         }
       });
       
+      // Set up console log listener
+      window.api.onConsoleLog((data) => {
+        const { level, message } = data;
+        
+        // Log to browser console with appropriate level
+        switch (level) {
+          case 'info':
+            console.log(`[INFO] ${message}`);
+            break;
+          case 'warn':
+            console.warn(`[WARNING] ${message}`);
+            break;
+          case 'error':
+            console.error(`[ERROR] ${message}`);
+            break;
+          default:
+            console.log(`[${level.toUpperCase()}] ${message}`);
+        }
+      });
+      
       try {
         const formData = {
           workDuration: parseInt(document.getElementById('workDuration').value),
@@ -541,8 +564,9 @@
           progressContainer.style.display = 'none';
         }, 3000);
         
-        // Clean up progress listener
+        // Clean up listeners
         window.api.removeGenerationProgress();
+        window.api.removeConsoleLog();
       }
     }
     
@@ -560,6 +584,35 @@
       
       // Form submission
       document.getElementById('workoutForm').addEventListener('submit', handleSubmit);
+      
+      // Debug button
+      document.getElementById('debugBtn').addEventListener('click', async () => {
+        const output = document.getElementById('output');
+        output.textContent = '🔧 Debugging FFmpeg installation...\n';
+        
+        try {
+          const debugInfo = await window.api.debugFfmpeg();
+          output.textContent += `\n📋 FFmpeg Debug Information:\n`;
+          output.textContent += `Path: ${debugInfo.ffmpegPath}\n`;
+          output.textContent += `Exists: ${debugInfo.exists ? '✅ Yes' : '❌ No'}\n`;
+          output.textContent += `Resources Path: ${debugInfo.resourcesPath}\n`;
+          output.textContent += `Current Directory: ${debugInfo.currentDir}\n`;
+          output.textContent += `Development Mode: ${debugInfo.isDev ? 'Yes' : 'No'}\n`;
+          output.textContent += `Platform: ${debugInfo.platform}\n`;
+          output.textContent += `Architecture: ${debugInfo.arch}\n`;
+          
+          if (debugInfo.version) {
+            output.textContent += `Version: ${debugInfo.version}\n`;
+          } else if (debugInfo.versionError) {
+            output.textContent += `Version Error: ${debugInfo.versionError}\n`;
+          }
+          
+          output.scrollTop = output.scrollHeight;
+        } catch (error) {
+          output.textContent += `\n❌ Debug Error: ${error.message}\n`;
+          output.scrollTop = output.scrollHeight;
+        }
+      });
     });
   </script>
 </body>

@@ -24,7 +24,8 @@
       "media/**/*"
     ],
     "asarUnpack": [
-      "media/**"
+      "media/**",
+      "node_modules/ffmpeg-static/**"
     ],
     "directories": {
       "buildResources": "media"

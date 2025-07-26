@@ -7,6 +7,8 @@ const {
   getEquipment,
   getDesktopPath,
   generateWorkoutVideo,
+  getFfmpegPath,
+  checkFfmpeg,
 } = require("./generator");
 const isDev = require("electron-is-dev");
 const nativeImage = require("electron").nativeImage;
@@ -125,6 +127,11 @@ ipcMain.handle("generate-workout-video", async (event, formData) => {
       event.sender.send("generation-progress", { progress, message });
     };
 
+    // Create console callback function
+    const consoleCallback = (level, message) => {
+      event.sender.send("console-log", { level, message });
+    };
+
     return await generateWorkoutVideo(
       workDuration,
       restDuration,
@@ -133,16 +140,60 @@ ipcMain.handle("generate-workout-video", async (event, formData) => {
       totalWorkoutDuration,
       categories,
       equipment,
-      progressCallback
+      progressCallback,
+      consoleCallback
     );
   } catch (error) {
     throw new Error(`Failed to generate workout video: ${error.message}`);
   }
 });
 
+// Handle FFmpeg debugging
+ipcMain.handle("debug-ffmpeg", async () => {
+  try {
+    const ffmpegPath = getFfmpegPath();
+    const debugInfo = {
+      ffmpegPath: ffmpegPath,
+      exists: require('fs').existsSync(ffmpegPath),
+      resourcesPath: process.resourcesPath,
+      currentDir: __dirname,
+      isDev: isDev,
+      platform: require('os').platform(),
+      arch: require('os').arch()
+    };
+    
+    // Try to run FFmpeg version command
+    try {
+      const { spawn } = require("child_process");
+      const result = await new Promise((resolve, reject) => {
+        const ffmpegProcess = spawn(ffmpegPath, ["-version"]);
+        let output = "";
+        ffmpegProcess.stdout.on("data", (data) => (output += data));
+        ffmpegProcess.stderr.on("data", (data) => (output += data));
+        ffmpegProcess.on("close", (code) => {
+          if (code === 0) {
+            resolve(output.split('\n')[0]); // First line contains version info
+          } else {
+            reject(new Error(`FFmpeg exited with code ${code}`));
+          }
+        });
+        ffmpegProcess.on("error", (err) => reject(err));
+      });
+      debugInfo.version = result;
+    } catch (error) {
+      debugInfo.versionError = error.message;
+    }
+    
+    return debugInfo;
+  } catch (error) {
+    throw new Error(`Failed to debug FFmpeg: ${error.message}`);
+  }
+});
+
 // Example: Listen for FFmpeg command from renderer (legacy)
 ipcMain.handle("run-ffmpeg", async () => {
   return new Promise((resolve, reject) => {
+    const ffmpegPath = getFfmpegPath();
     const ffmpeg = spawn(ffmpegPath, [
       "-version", // change this to your desired command
     ]);

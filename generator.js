@@ -5,6 +5,60 @@ const ffmpeg = require("ffmpeg-static");
 const os = require("os");
 const { app } = require("electron");
 
+// Function to get the correct FFmpeg path for both dev and production
+function getFfmpegPath() {
+  // In development, ffmpeg-static returns the path directly
+  if (!process.mainModule || process.mainModule.filename.indexOf("app.asar") === -1) {
+    console.log(`[DEBUG] Development mode - using ffmpeg-static path: ${ffmpeg}`);
+    return ffmpeg;
+  }
+  
+  // In production (packaged app), we need to look in the unpacked resources
+  const platform = os.platform();
+  const arch = os.arch();
+  
+  console.log(`[DEBUG] Production mode - Platform: ${platform}, Arch: ${arch}`);
+  console.log(`[DEBUG] Resources path: ${process.resourcesPath}`);
+  console.log(`[DEBUG] Current directory: ${__dirname}`);
+  
+  // Determine the correct binary name for the platform
+  let binaryName = 'ffmpeg';
+  if (platform === 'win32') {
+    binaryName = 'ffmpeg.exe';
+  } else if (platform === 'darwin') {
+    binaryName = 'ffmpeg';
+  } else if (platform === 'linux') {
+    binaryName = 'ffmpeg';
+  }
+  
+  console.log(`[DEBUG] Looking for binary: ${binaryName}`);
+  
+  // Try to find the binary in the unpacked resources
+  const possiblePaths = [
+    path.join(process.resourcesPath, 'app.asar.unpacked', 'node_modules', 'ffmpeg-static', binaryName),
+    path.join(process.resourcesPath, 'app.asar.unpacked', 'ffmpeg', binaryName),
+    path.join(__dirname, '..', 'app.asar.unpacked', 'node_modules', 'ffmpeg-static', binaryName),
+    path.join(__dirname, '..', 'app.asar.unpacked', 'ffmpeg', binaryName),
+    // Fallback to the original ffmpeg-static path
+    ffmpeg
+  ];
+  
+  console.log(`[DEBUG] Checking possible paths:`);
+  for (let i = 0; i < possiblePaths.length; i++) {
+    const ffmpegPath = possiblePaths[i];
+    const exists = fs.existsSync(ffmpegPath);
+    console.log(`[DEBUG] ${i + 1}. ${ffmpegPath} - ${exists ? 'EXISTS' : 'NOT FOUND'}`);
+    if (exists) {
+      console.log(`[DEBUG] Found FFmpeg at: ${ffmpegPath}`);
+      return ffmpegPath;
+    }
+  }
+  
+  console.log(`[DEBUG] FFmpeg not found in any expected location, using fallback: ${ffmpeg}`);
+  // If we can't find it, return the original path and let it fail with a better error
+  return ffmpeg;
+}
+
 // Colors for output (for console logging)
 const colors = {
   RED: "\x1b[31m",
@@ -15,16 +69,28 @@ const colors = {
 };
 
 // Function to print colored output
-function printStatus(message) {
+function printStatus(message, consoleCallback = null) {
+  const formattedMessage = `[INFO] ${message}`;
   console.log(`${colors.GREEN}[INFO]${colors.NC} ${message}`);
+  if (consoleCallback) {
+    consoleCallback('info', message);
+  }
 }
 
-function printWarning(message) {
+function printWarning(message, consoleCallback = null) {
+  const formattedMessage = `[WARNING] ${message}`;
   console.log(`${colors.YELLOW}[WARNING]${colors.NC} ${message}`);
+  if (consoleCallback) {
+    consoleCallback('warn', message);
+  }
 }
 
-function printError(message) {
+function printError(message, consoleCallback = null) {
+  const formattedMessage = `[ERROR] ${message}`;
   console.log(`${colors.RED}[ERROR]${colors.NC} ${message}`);
+  if (consoleCallback) {
+    consoleCallback('error', message);
+  }
 }
 
 // Function to validate numeric input
@@ -85,13 +151,22 @@ function getDesktopPath() {
 }
 
 // Function to check if FFMPEG is available
-function checkFfmpeg() {
-  if (!ffmpeg) {
+function checkFfmpeg(consoleCallback = null) {
+  const ffmpegPath = getFfmpegPath();
+  
+  if (!ffmpegPath) {
     throw new Error(
       "FFMPEG is not available. Please ensure ffmpeg-static is properly installed."
     );
   }
-  printStatus("FFMPEG is available and ready to use.");
+  
+  if (!fs.existsSync(ffmpegPath)) {
+    throw new Error(
+      `FFMPEG executable not found at: ${ffmpegPath}. Please ensure ffmpeg-static is properly installed and unpacked.`
+    );
+  }
+  
+  printStatus(`FFMPEG is available and ready to use at: ${ffmpegPath}`, consoleCallback);
 }
 
 function getBaseDir() {
@@ -220,7 +295,8 @@ function getExerciseVideosByEquipment(categories, equipment) {
 // Function to run FFmpeg command and return a promise
 function runFfmpeg(args) {
   return new Promise((resolve, reject) => {
-    const ffmpegProcess = spawn(ffmpeg, args);
+    const ffmpegPath = getFfmpegPath();
+    const ffmpegProcess = spawn(ffmpegPath, args);
 
     let stdout = "";
     let stderr = "";
@@ -401,8 +477,8 @@ function createProgressGridOverlay(
 }
 
 // Function to create countdown video segment
-async function createCountdownSegment(duration, text, outputFile) {
-  printStatus(`Creating countdown segment: ${text} (${duration}s)`);
+async function createCountdownSegment(duration, text, outputFile, consoleCallback = null) {
+  printStatus(`Creating countdown segment: ${text} (${duration}s)`, consoleCallback);
 
   // Check if BEEP.mp3 exists
   const beepFile = path.join(getBaseMediaDir(), "audio", "BEEP.mp3");
@@ -448,11 +524,11 @@ async function createCountdownSegment(duration, text, outputFile) {
       throw new Error(`Countdown segment file not created: ${outputFile}`);
     }
 
-    printStatus(`Countdown segment created: ${outputFile}`);
+    printStatus(`Countdown segment created: ${outputFile}`, consoleCallback);
     return true;
   } catch (error) {
-    printError(`Failed to create countdown segment: ${outputFile}`);
-    printError(error.message);
+    printError(`Failed to create countdown segment: ${outputFile}`, consoleCallback);
+    printError(error.message, consoleCallback);
     return false;
   }
 }
@@ -465,17 +541,19 @@ async function createExerciseSegment(
   currentSet,
   totalStations,
   setsPerStation,
-  outputFile
+  outputFile,
+  consoleCallback = null
 ) {
   printStatus(
     `Creating exercise segment: ${path.basename(videoFile)} (Station ${
       currentStation + 1
-    }, Set ${currentSet})`
+    }, Set ${currentSet})`,
+    consoleCallback
   );
 
   // Check if video file exists
   if (!fs.existsSync(videoFile)) {
-    printError(`Video file not found: ${videoFile}`);
+    printError(`Video file not found: ${videoFile}`, consoleCallback);
     return false;
   }
 
@@ -532,11 +610,11 @@ async function createExerciseSegment(
       throw new Error(`Exercise segment file not created: ${outputFile}`);
     }
 
-    printStatus(`Exercise segment created: ${outputFile}`);
+    printStatus(`Exercise segment created: ${outputFile}`, consoleCallback);
     return true;
   } catch (error) {
-    printError(`Failed to create exercise segment: ${outputFile}`);
-    printError(error.message);
+    printError(`Failed to create exercise segment: ${outputFile}`, consoleCallback);
+    printError(error.message, consoleCallback);
     return false;
   }
 }
@@ -545,17 +623,19 @@ async function createExerciseSegment(
 async function createStationChangeSegment(
   duration,
   nextExerciseFile,
-  outputFile
+  outputFile,
+  consoleCallback = null
 ) {
   printStatus(
     `Creating station change segment with preview: ${path.basename(
       nextExerciseFile
-    )} (${duration}s)`
+    )} (${duration}s)`,
+    consoleCallback
   );
 
   // Check if video file exists
   if (!fs.existsSync(nextExerciseFile)) {
-    printError(`Next exercise video not found: ${nextExerciseFile}`);
+    printError(`Next exercise video not found: ${nextExerciseFile}`, consoleCallback);
     return false;
   }
 
@@ -604,11 +684,11 @@ async function createStationChangeSegment(
       throw new Error(`Station change segment file not created: ${outputFile}`);
     }
 
-    printStatus(`Station change segment created: ${outputFile}`);
+    printStatus(`Station change segment created: ${outputFile}`, consoleCallback);
     return true;
   } catch (error) {
-    printError(`Failed to create station change segment: ${outputFile}`);
-    printError(error.message);
+    printError(`Failed to create station change segment: ${outputFile}`, consoleCallback);
+    printError(error.message, consoleCallback);
     return false;
   }
 }
@@ -623,7 +703,8 @@ function createFileList(fileList, segments) {
 function selectExercisesEvenly(
   maxExercises,
   selectedCategories,
-  selectedEquipment
+  selectedEquipment,
+  consoleCallback = null
 ) {
   const equipmentVideos = getExerciseVideosByEquipment(
     selectedCategories,
@@ -637,12 +718,12 @@ function selectExercisesEvenly(
   const remainingExercises = maxExercises % selectedEquipment.length;
 
   // Output debug info
-  console.error(
-    `Distributing ${maxExercises} exercises across ${selectedEquipment.length} equipment types`
-  );
-  console.error(`Base exercises per equipment: ${exercisesPerEquipment}`);
-  if (remainingExercises > 0) {
-    console.error(`Extra exercises to distribute: ${remainingExercises}`);
+  if (consoleCallback) {
+    consoleCallback('info', `Distributing ${maxExercises} exercises across ${selectedEquipment.length} equipment types`);
+    consoleCallback('info', `Base exercises per equipment: ${exercisesPerEquipment}`);
+    if (remainingExercises > 0) {
+      consoleCallback('info', `Extra exercises to distribute: ${remainingExercises}`);
+    }
   }
 
   const selectedExercises = [];
@@ -653,7 +734,7 @@ function selectExercisesEvenly(
     const videosForEquip = equipmentVideos[equip] || [];
 
     if (videosForEquip.length === 0) {
-      printWarning(`No videos found for equipment: ${equip}`);
+      printWarning(`No videos found for equipment: ${equip}`, consoleCallback);
       continue;
     }
 
@@ -682,7 +763,9 @@ function selectExercisesEvenly(
       }
     }
 
-    console.error(`Selected ${selectedFromEquip} exercises from '${equip}'`);
+    if (consoleCallback) {
+      consoleCallback('info', `Selected ${selectedFromEquip} exercises from '${equip}'`);
+    }
   }
 
   // Shuffle the final selection to randomize the order
@@ -706,16 +789,25 @@ async function generateWorkoutVideo(
   totalWorkoutDuration,
   categories,
   equipment,
-  progressCallback = null
+  progressCallback = null,
+  consoleCallback = null
 ) {
-  console.log(`${colors.BLUE}================================${colors.NC}`);
-  console.log(`${colors.BLUE}    WORKOUT VIDEO GENERATOR    ${colors.NC}`);
-  console.log(`${colors.BLUE}================================${colors.NC}`);
-  console.log();
+  // Helper function to log to both console and browser
+  const logToBoth = (message) => {
+    console.log(message);
+    if (consoleCallback) {
+      consoleCallback('info', message.replace(/\x1b\[[0-9;]*m/g, '')); // Remove ANSI color codes
+    }
+  };
+
+  logToBoth(`${colors.BLUE}================================${colors.NC}`);
+  logToBoth(`${colors.BLUE}    WORKOUT VIDEO GENERATOR    ${colors.NC}`);
+  logToBoth(`${colors.BLUE}================================${colors.NC}`);
+  logToBoth('');
 
   try {
     // Check FFMPEG installation
-    checkFfmpeg();
+    checkFfmpeg(consoleCallback);
 
     // Update progress
     if (progressCallback) {
@@ -753,13 +845,13 @@ async function generateWorkoutVideo(
       );
     }
 
-    printStatus("Parameters set:");
-    console.log(`  Work duration: ${workDuration}s`);
-    console.log(`  Rest duration: ${restDuration}s`);
-    console.log(`  Sets per station: ${setsPerStation}`);
-    console.log(`  Station rest time: ${stationRest}s`);
-    console.log(`  Total workout duration: ${totalWorkoutDuration} minutes`);
-    console.log();
+    printStatus("Parameters set:", consoleCallback);
+    logToBoth(`  Work duration: ${workDuration}s`);
+    logToBoth(`  Rest duration: ${restDuration}s`);
+    logToBoth(`  Sets per station: ${setsPerStation}`);
+    logToBoth(`  Station rest time: ${stationRest}s`);
+    logToBoth(`  Total workout duration: ${totalWorkoutDuration} minutes`);
+    logToBoth('');
 
     // Update progress
     if (progressCallback) {
@@ -787,12 +879,14 @@ async function generateWorkoutVideo(
 
     // Select exercises with even distribution across equipment types
     printStatus(
-      "Selecting exercises with even distribution across equipment types..."
+      "Selecting exercises with even distribution across equipment types...",
+      consoleCallback
     );
     const exerciseVideos = selectExercisesEvenly(
       maxExercises,
       categories,
-      equipment
+      equipment,
+      consoleCallback
     );
 
     if (exerciseVideos.length === 0) {
@@ -800,7 +894,8 @@ async function generateWorkoutVideo(
     }
 
     printStatus(
-      `Selected ${exerciseVideos.length} exercises for ${totalWorkoutDuration} minute workout.`
+      `Selected ${exerciseVideos.length} exercises for ${totalWorkoutDuration} minute workout.`,
+      consoleCallback
     );
 
     // Calculate total workout time
@@ -813,7 +908,8 @@ async function generateWorkoutVideo(
     printStatus(
       `Estimated total workout time: ${totalTime} seconds (${Math.floor(
         totalTime / 60
-      )} minutes)`
+      )} minutes)`,
+      consoleCallback
     );
 
     // Update progress
@@ -824,7 +920,7 @@ async function generateWorkoutVideo(
     // Create temporary directory for video segments using OS temp dir
     const tempDir = path.join(os.tmpdir(), "workoutgen_temp_" + Date.now());
     fs.mkdirSync(tempDir, { recursive: true });
-    printStatus(`Creating temporary directory: ${tempDir}`);
+    printStatus(`Creating temporary directory: ${tempDir}`, consoleCallback);
 
     // Update progress
     if (progressCallback) {
@@ -832,13 +928,13 @@ async function generateWorkoutVideo(
     }
 
     // Generate video segments
-    printStatus("Generating video segments...");
+    printStatus("Generating video segments...", consoleCallback);
     const segments = [];
     let segmentCount = 0;
 
     for (let i = 0; i < exerciseVideos.length; i++) {
       const exerciseName = path.basename(exerciseVideos[i], ".mp4");
-      printStatus(`Processing exercise: ${exerciseName}`);
+      printStatus(`Processing exercise: ${exerciseName}`, consoleCallback);
 
       // Update progress for each exercise
       if (progressCallback) {
@@ -863,7 +959,8 @@ async function generateWorkoutVideo(
           set,
           exerciseVideos.length,
           setsPerStation,
-          workFile
+          workFile,
+          consoleCallback
         );
 
         if (!workSuccess) {
@@ -881,7 +978,8 @@ async function generateWorkoutVideo(
           const restSuccess = await createCountdownSegment(
             restDuration,
             "REST",
-            restFile
+            restFile,
+            consoleCallback
           );
 
           if (!restSuccess) {
@@ -903,7 +1001,8 @@ async function generateWorkoutVideo(
         const stationRestSuccess = await createStationChangeSegment(
           stationRest,
           nextExercise,
-          stationRestFile
+          stationRestFile,
+          consoleCallback
         );
 
         if (!stationRestSuccess) {
@@ -934,12 +1033,12 @@ async function generateWorkoutVideo(
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const outputFile = path.join(desktopPath, `workout_video_${timestamp}.mp4`);
 
-    printStatus(`Output will be saved to: ${desktopPath}`);
-    printStatus("Concatenating video segments...");
+    printStatus(`Output will be saved to: ${desktopPath}`, consoleCallback);
+    printStatus("Concatenating video segments...", consoleCallback);
 
     // Show file list for debugging
-    printStatus("File list contents:");
-    console.log(fs.readFileSync(fileList, "utf8"));
+    printStatus("File list contents:", consoleCallback);
+    logToBoth(fs.readFileSync(fileList, "utf8"));
 
     const concatArgs = [
       "-f",
@@ -957,7 +1056,7 @@ async function generateWorkoutVideo(
     await runFfmpeg(concatArgs);
 
     if (fs.existsSync(outputFile)) {
-      printStatus(`Workout video created successfully: ${outputFile}`);
+      printStatus(`Workout video created successfully: ${outputFile}`, consoleCallback);
 
       // Update progress
       if (progressCallback) {
@@ -977,10 +1076,10 @@ async function generateWorkoutVideo(
         ];
         const duration = await runFfmpeg(durationArgs);
         if (duration.trim()) {
-          printStatus(`Video duration: ${duration.trim()} seconds`);
+          printStatus(`Video duration: ${duration.trim()} seconds`, consoleCallback);
         }
       } catch (error) {
-        printWarning("Could not determine video duration");
+        printWarning("Could not determine video duration", consoleCallback);
       }
     } else {
       throw new Error("Failed to create workout video.");
@@ -992,7 +1091,7 @@ async function generateWorkoutVideo(
     }
 
     // Clean up temporary files
-    printStatus("Cleaning up temporary files...");
+    printStatus("Cleaning up temporary files...", consoleCallback);
     fs.rmSync(tempDir, { recursive: true, force: true });
 
     // Update progress
@@ -1000,13 +1099,13 @@ async function generateWorkoutVideo(
       progressCallback(100, "Workout video generation complete!");
     }
 
-    console.log();
-    printStatus("Workout video generation complete!");
-    console.log(`Output file: ${outputFile}`);
+    logToBoth('');
+    printStatus("Workout video generation complete!", consoleCallback);
+    logToBoth(`Output file: ${outputFile}`);
 
     return outputFile;
   } catch (error) {
-    printError(error.message);
+    printError(error.message, consoleCallback);
     throw error;
   }
 }
@@ -1019,6 +1118,7 @@ module.exports = {
   formatExerciseName,
   getDesktopPath,
   checkFfmpeg,
+  getFfmpegPath,
   getCategories,
   getEquipment,
   getExerciseVideosByEquipment,

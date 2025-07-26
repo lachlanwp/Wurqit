@@ -23,6 +23,19 @@ contextBridge.exposeInMainWorld("api", {
     ipcRenderer.removeAllListeners('generation-progress');
   },
   
+  // Listen for console log messages
+  onConsoleLog: (callback) => {
+    ipcRenderer.on('console-log', (event, data) => callback(data));
+  },
+  
+  // Remove console log listener
+  removeConsoleLog: () => {
+    ipcRenderer.removeAllListeners('console-log');
+  },
+  
+  // Debug FFmpeg installation
+  debugFfmpeg: () => ipcRenderer.invoke("debug-ffmpeg"),
+  
   // Legacy ffmpeg function (keeping for compatibility)
   run: () => ipcRenderer.invoke("run-ffmpeg"),
 });
