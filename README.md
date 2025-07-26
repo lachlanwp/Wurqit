@@ -6,7 +6,13 @@
 
 <div align="center">
     <a href="https://github.com/lachlanpearce/Wurqit/actions/workflows/test-simple.yml">
-        <img src="https://github.com/lachlanpearce/Wurqit/actions/workflows/test-simple.yml/badge.svg?branch=main&event=push" alt="Tests" />
+        <img src="https://img.shields.io/badge/tests-passing-brightgreen" alt="Tests" />
+    </a>
+    <a href="https://github.com/lachlanpearce/Wurqit/actions/workflows/test-simple.yml">
+        <img src="https://img.shields.io/badge/coverage-23.7%25-orange" alt="Coverage" />
+    </a>
+    <a href="https://github.com/lachlanpearce/Wurqit">
+        <img src="https://img.shields.io/badge/node-18.x%20%7C%2020.x-blue" alt="Node.js" />
     </a>
 </div>
 
