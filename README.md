@@ -68,28 +68,32 @@ This is an Electron desktop application. All dependencies are bundled with the a
 
 Run the following commands
 
-`yarn install`
+```bash
+yarn install
+```
 
-`yarn start`
+```bash
+yarn start
+```
 
 ## Testing
 
 Run the test suite with Jest:
 
 ```bash
-npm test
+yarn test
 ```
 
 Run tests in watch mode:
 
 ```bash
-npm run test:watch
+yarn test:watch
 ```
 
 Run tests with coverage:
 
 ```bash
-npm test -- --coverage
+yarn test -- --coverage
 ```
 
 See the [tests/README.md](tests/README.md) for detailed testing information.
@@ -119,7 +123,9 @@ Provide your own values in place of `...`
 
 Then run
 
-`yarn build`
+```bash
+yarn build
+```
 
 # Exercise data source
 
