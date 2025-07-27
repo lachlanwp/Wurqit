@@ -79,149 +79,7 @@ describe("Generator Module", () => {
       });
     });
 
-    describe("getDesktopPath", () => {
-      test("should return correct desktop path for macOS", () => {
-        os.platform.mockReturnValue("darwin");
-        os.homedir.mockReturnValue("/Users/testuser");
-        fs.existsSync.mockReturnValue(true);
 
-        const result = generator.getDesktopPath();
-        expect(result).toBe("/Users/testuser/Desktop");
-      });
-
-      test("should return correct desktop path for Windows", () => {
-        os.platform.mockReturnValue("win32");
-        os.homedir.mockReturnValue("C:\\Users\\testuser");
-
-        // Mock registry query to fail (simulating no registry access)
-        const { execSync } = require("child_process");
-        execSync.mockImplementation(() => {
-          throw new Error("Registry access denied");
-        });
-
-        // Mock fs.existsSync to return true for default Desktop
-        fs.existsSync.mockImplementation((path) => {
-          return path === "C:\\Users\\testuser\\Desktop";
-        });
-
-        // Mock fs.readdirSync to return empty array (no OneDrive folders)
-        fs.readdirSync.mockReturnValue([]);
-
-        const result = generator.getDesktopPath();
-        expect(result).toBe("C:\\Users\\testuser/Desktop");
-      });
-
-      // TODO: Fix OneDrive test - path construction issue with mocks
-      // test("should return OneDrive desktop path for Windows when available", () => {
-      //   os.platform.mockReturnValue("win32");
-      //   os.homedir.mockReturnValue("C:\\Users\\testuser");
-
-      //   // Mock registry query to fail
-      //   const { execSync } = require("child_process");
-      //   execSync.mockImplementation(() => {
-      //     throw new Error("Registry access denied");
-      //   });
-
-      //   // Mock fs.existsSync to return true for OneDrive Desktop and false for default Desktop
-      //   fs.existsSync.mockImplementation((path) => {
-      //     if (path === "C:\\Users\\testuser\\OneDrive\\Desktop") {
-      //       return true;
-      //     }
-      //     if (path === "C:\\Users\\testuser\\Desktop") {
-      //       return false;
-      //     }
-      //     return false;
-      //   });
-
-      //   // Mock fs.readdirSync to return OneDrive folder
-      //   fs.readdirSync.mockReturnValue([
-      //     { name: "OneDrive", isDirectory: () => true },
-      //   ]);
-
-      //   const result = generator.getDesktopPath();
-      //   expect(result).toBe("C:\\Users\\testuser\\OneDrive\\Desktop");
-      // });
-
-      test("should return registry desktop path for Windows when available", () => {
-        os.platform.mockReturnValue("win32");
-        os.homedir.mockReturnValue("C:\\Users\\testuser");
-
-        // Mock the registry query result
-        const { execSync } = require("child_process");
-        execSync.mockReturnValue(
-          "Desktop    REG_EXPAND_SZ    C:\\Users\\testuser\\OneDrive\\Desktop"
-        );
-
-        fs.existsSync.mockImplementation((path) => {
-          return path === "C:\\Users\\testuser\\OneDrive\\Desktop";
-        });
-
-        const result = generator.getDesktopPath();
-        expect(result).toBe("C:\\Users\\testuser\\OneDrive\\Desktop");
-      });
-
-      test("should fallback to default desktop path when registry query fails", () => {
-        os.platform.mockReturnValue("win32");
-        os.homedir.mockReturnValue("C:\\Users\\testuser");
-
-        // Mock registry query to fail
-        const { execSync } = require("child_process");
-        execSync.mockImplementation(() => {
-          throw new Error("Registry access denied");
-        });
-
-        // Mock fs.existsSync to return true for default Desktop
-        fs.existsSync.mockImplementation((path) => {
-          return path === "C:\\Users\\testuser\\Desktop";
-        });
-
-        // Mock fs.readdirSync to return empty array (no OneDrive folders)
-        fs.readdirSync.mockReturnValue([]);
-
-        const result = generator.getDesktopPath();
-        expect(result).toBe("C:\\Users\\testuser/Desktop");
-      });
-
-      test("should return correct desktop path for Linux", () => {
-        os.platform.mockReturnValue("linux");
-        os.homedir.mockReturnValue("/home/testuser");
-        fs.existsSync.mockReturnValue(true);
-
-        const result = generator.getDesktopPath();
-        expect(result).toBe("/home/testuser/Desktop");
-      });
-
-      test("should create desktop directory if it does not exist on Linux", () => {
-        os.platform.mockReturnValue("linux");
-        os.homedir.mockReturnValue("/home/testuser");
-        fs.existsSync.mockReturnValue(false);
-
-        const result = generator.getDesktopPath();
-        expect(result).toBe("/home/testuser/Desktop");
-        expect(fs.mkdirSync).toHaveBeenCalledWith("/home/testuser/Desktop", {
-          recursive: true,
-        });
-      });
-
-      test("should fallback to home directory if desktop creation fails", () => {
-        os.platform.mockReturnValue("linux");
-        os.homedir.mockReturnValue("/home/testuser");
-        fs.existsSync.mockReturnValue(false);
-        fs.mkdirSync.mockImplementation(() => {
-          throw new Error("Permission denied");
-        });
-
-        const result = generator.getDesktopPath();
-        expect(result).toBe("/home/testuser");
-      });
-
-      test("should fallback to current directory if homeDir is null", () => {
-        os.homedir.mockReturnValue(null);
-
-        const result = generator.getDesktopPath();
-        expect(result).toBe("/mock/current/directory");
-      });
-    });
   });
 
   describe("FFmpeg Functions", () => {
@@ -558,9 +416,25 @@ describe("Generator Module", () => {
             invalidParams.stationRest,
             invalidParams.totalWorkoutDuration,
             invalidParams.categories,
-            invalidParams.equipment
+            invalidParams.equipment,
+            "/test/output/path"
           )
         ).rejects.toThrow("Invalid work duration");
+      });
+
+      test("should throw error when no output path is provided", async () => {
+        await expect(
+          generator.generateWorkoutVideo(
+            30, // workDuration
+            10, // restDuration
+            2, // setsPerStation
+            15, // stationRest
+            5, // totalWorkoutDuration
+            ["strength"], // categories
+            ["barbell"], // equipment
+            null // outputPath - should cause error
+          )
+        ).rejects.toThrow("Output path is required. Please select a folder to save the video.");
       });
 
       test("should generate workout video successfully", async () => {
@@ -596,7 +470,8 @@ describe("Generator Module", () => {
           15, // stationRest
           5, // totalWorkoutDuration
           ["strength"], // categories
-          ["barbell"] // equipment
+          ["barbell"], // equipment
+          "/test/output/path" // outputPath
         );
 
         expect(typeof result).toBe("string");

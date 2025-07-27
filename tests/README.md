@@ -6,11 +6,11 @@ This directory contains comprehensive unit tests for the `generator.js` module, 
 
 ### `generator.test.js` (Comprehensive)
 
-A comprehensive test suite with 47 passing tests that covers all major functionality of the generator module.
+A comprehensive test suite with 35 passing tests that covers all major functionality of the generator module.
 
 **Coverage:**
 
-- ✅ Utility Functions (validateNumber, formatExerciseName, getDesktopPath)
+- ✅ Utility Functions (validateNumber, formatExerciseName)
 - ✅ FFmpeg Functions (getFfmpegPath, checkFfmpeg, runFfmpeg)
 - ✅ File System Functions (getBaseDir, getBaseMediaDir, getVideosDir, getCategories, getEquipment, getExerciseVideosByEquipment)
 - ✅ Video Generation Functions (createProgressGridOverlay, createFileList)
@@ -22,11 +22,11 @@ A comprehensive test suite with 47 passing tests that covers all major functiona
 
 ### `generator-simple.test.js` (Simplified)
 
-A simplified test suite with 41 passing tests that focuses on core functionality. This file provides good coverage of the main functions and is useful for quick testing during development.
+A simplified test suite with 29 passing tests that focuses on core functionality. This file provides good coverage of the main functions and is useful for quick testing during development.
 
 **Coverage:**
 
-- ✅ Utility Functions (validateNumber, formatExerciseName, getDesktopPath)
+- ✅ Utility Functions (validateNumber, formatExerciseName)
 - ✅ FFmpeg Functions (getFfmpegPath, checkFfmpeg, runFfmpeg)
 - ✅ File System Functions (getBaseDir, getBaseMediaDir, getVideosDir, getCategories, getEquipment, getExerciseVideosByEquipment)
 - ✅ Video Generation Functions (createProgressGridOverlay, createFileList)
@@ -52,7 +52,6 @@ The tests use Jest mocks for the following modules:
 
    - Input validation
    - Exercise name formatting
-   - Desktop path resolution for different operating systems
 
 2. **FFmpeg Functions**
 
@@ -170,8 +169,8 @@ test("should throw error if ffmpeg path is not available", () => {
 
 ✅ **All tests are passing!**
 
-- **Total Tests**: 80
-- **Passed**: 80
+- **Total Tests**: 64
+- **Passed**: 64
 - **Failed**: 0
 - **Test Suites**: 2 passed, 2 total
 
