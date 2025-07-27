@@ -442,8 +442,8 @@ function createProgressGridOverlay(
       // Determine cell color based on status
       let cellColor;
       if (station < currentStation || (station === currentStation && set < currentSet)) {
-        // Completed set - use a darker color to represent "full"
-        cellColor = "darkblue";
+        // Completed set - use a sporty lime green color to represent "full"
+        cellColor = "lime";
       } else {
         // Not yet completed set - use a lighter color to represent "empty"
         cellColor = "gray";
@@ -693,7 +693,7 @@ async function createStationChangeSegment(
     `color=c=black:size=1920x1080:duration=${duration}`,
     ...(fs.existsSync(beepFile) ? ["-i", beepFile] : []),
     "-filter_complex",
-    `[0:v]scale=600:600:force_original_aspect_ratio=decrease,pad=600:600:(ow-iw)/2:(oh-ih)/2[scaled];[1:v][scaled]overlay=(W-w)/2:(H-h)/2-150,drawtext=text='NEXT EXERCISE':fontfile='${oswaldFontPath.replace(/\\/g, '/')}':fontcolor=white:fontsize=72:x=(w-text_w)/2:y=50,drawtext=text='${nextExerciseName}':fontfile='${oswaldFontPath.replace(/\\/g, '/')}':fontcolor=white:fontsize=48:x=(w-text_w)/2:y=150,drawtext=text='%{eif\\:(${duration}-t)\\:d\\:2}':fontfile='${oswaldFontPath.replace(/\\/g, '/')}':fontcolor=white:fontsize=120:x=(w-text_w)/2:y=h-100[v]${
+    `[0:v]scale=600:600:force_original_aspect_ratio=decrease,pad=600:600:(ow-iw)/2:(oh-ih)/2[scaled];[1:v][scaled]overlay=(W-w)/2:(H-h)/2,drawtext=text='NEXT EXERCISE':fontfile='${oswaldFontPath.replace(/\\/g, '/')}':fontcolor=white:fontsize=72:x=(w-text_w)/2:y=50,drawtext=text='${nextExerciseName}':fontfile='${oswaldFontPath.replace(/\\/g, '/')}':fontcolor=white:fontsize=48:x=(w-text_w)/2:y=150,drawtext=text='%{eif\\:(${duration}-t)\\:d\\:2}':fontfile='${oswaldFontPath.replace(/\\/g, '/')}':fontcolor=white:fontsize=120:x=(w-text_w)/2:y=h-100[v]${
       fs.existsSync(beepFile) ? ";[2:a]adelay=0|0[beep]" : ""
     }`,
     "-map",
