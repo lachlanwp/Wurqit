@@ -733,6 +733,37 @@ async function createStationChangeSegment(
   }
 }
 
+// Function to get celebration video files
+function getCelebrationVideos(consoleCallback = null) {
+  const celebrateDir = path.join(getBaseMediaDir(), "celebrate");
+  printStatus(`Looking for celebration directory: ${celebrateDir}`, consoleCallback);
+  
+  let celebrateFiles = [];
+
+  // Try to get celebration video files
+  if (fs.existsSync(celebrateDir)) {
+    try {
+      const items = fs.readdirSync(celebrateDir);
+      for (const item of items) {
+        if (item.toLowerCase().endsWith(".mp4")) {
+          celebrateFiles.push(path.join(celebrateDir, item));
+        }
+      }
+      
+      if (celebrateFiles.length > 0) {
+        printStatus(`Found ${celebrateFiles.length} celebration videos:`, consoleCallback);
+        celebrateFiles.forEach(file => {
+          printStatus(`  - ${path.basename(file)}`, consoleCallback);
+        });
+      }
+    } catch (error) {
+      printWarning(`Could not read celebration directory: ${error.message}`, consoleCallback);
+    }
+  }
+
+  return celebrateFiles;
+}
+
 // Function to create file list for concatenation
 function createFileList(fileList, segments) {
   const content = segments.map((segment) => `file '${segment}'`).join("\n");
@@ -1067,6 +1098,96 @@ async function generateWorkoutVideo(
       }
     }
 
+    // Add celebration videos at the end
+    printStatus("Adding celebration videos...", consoleCallback);
+    const celebrationVideos = getCelebrationVideos(consoleCallback);
+    
+    if (celebrationVideos.length > 0) {
+      printStatus(`Processing ${celebrationVideos.length} celebration videos...`, consoleCallback);
+      
+      // Transcode celebration videos to match workout segment format
+      for (let i = 0; i < celebrationVideos.length; i++) {
+        const originalVideo = celebrationVideos[i];
+        if (fs.existsSync(originalVideo)) {
+          const transcodedVideo = path.join(tempDir, `celebration_${segmentCount}.mp4`);
+          
+          printStatus(`Transcoding celebration video ${i + 1}/${celebrationVideos.length}: ${path.basename(originalVideo)}`, consoleCallback);
+          
+          try {
+            // Get Oswald font path for text overlay
+            const oswaldFontPath = path.join(getBaseMediaDir(), "images", "Oswald.ttf");
+            
+            // Check if font file exists
+            if (!fs.existsSync(oswaldFontPath)) {
+              printWarning(`Oswald font not found: ${oswaldFontPath}`, consoleCallback);
+              printWarning("Will transcode without text overlay", consoleCallback);
+              
+              // Simple transcoding without text overlay
+              const simpleTranscodeArgs = [
+                "-i",
+                originalVideo,
+                "-c:v",
+                "libx264",
+                "-preset",
+                "fast",
+                "-crf",
+                "23",
+                "-r",
+                "25",
+                "-c:a",
+                "aac",
+                "-y",
+                transcodedVideo,
+              ];
+              
+              await runFfmpeg(simpleTranscodeArgs);
+            } else {
+              printStatus(`Using font: ${oswaldFontPath}`, consoleCallback);
+              
+              const transcodeArgs = [
+                "-i",
+                originalVideo,
+                "-filter_complex",
+                `[0:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black,drawtext=text='CONGRATULATIONS!':fontfile='${oswaldFontPath.replace(/\\/g, '/')}':fontcolor=white:fontsize=72:x=(w-text_w)/2:y=50:box=1:boxcolor=black@0.7:boxborderw=5,drawtext=text='YOU COMPLETED THE WORKOUT!':fontfile='${oswaldFontPath.replace(/\\/g, '/')}':fontcolor=white:fontsize=60:x=(w-text_w)/2:y=150:box=1:boxcolor=black@0.7:boxborderw=5[v]`,
+                "-map",
+                "[v]",
+                "-c:v",
+                "libx264",
+                "-preset",
+                "fast",
+                "-crf",
+                "23",
+                "-r",
+                "25",
+                "-an",
+                "-y",
+                transcodedVideo,
+              ];
+              
+              await runFfmpeg(transcodeArgs);
+            }
+            
+            if (fs.existsSync(transcodedVideo)) {
+              const stats = fs.statSync(transcodedVideo);
+              printStatus(`Transcoded file size: ${(stats.size / 1024 / 1024).toFixed(2)} MB`, consoleCallback);
+              
+              segments.push(transcodedVideo);
+              segmentCount++;
+              printStatus(`Added transcoded celebration video: ${path.basename(transcodedVideo)}`, consoleCallback);
+            } else {
+              printWarning(`Failed to create transcoded celebration video: ${path.basename(originalVideo)}`, consoleCallback);
+            }
+          } catch (error) {
+            printWarning(`Failed to transcode celebration video ${path.basename(originalVideo)}: ${error.message}`, consoleCallback);
+          }
+        } else {
+          printWarning(`Celebration video not found: ${originalVideo}`, consoleCallback);
+        }
+      }
+    } else {
+      printStatus("No celebration videos found, skipping celebration", consoleCallback);
+    }
+
     // Update progress
     if (progressCallback) {
       progressCallback(85, "Creating file list for concatenation...");
@@ -1095,6 +1216,35 @@ async function generateWorkoutVideo(
     // Show file list for debugging
     printStatus("File list contents:", consoleCallback);
     logToBoth(fs.readFileSync(fileList, "utf8"));
+    
+    // Debug: Show segments array and verify each segment
+    printStatus(`Total segments to concatenate: ${segments.length}`, consoleCallback);
+    for (let i = 0; i < segments.length; i++) {
+      const segment = segments[i];
+      const exists = fs.existsSync(segment);
+      const segmentName = path.basename(segment);
+      printStatus(`Segment ${i + 1}: ${segmentName} - ${exists ? 'EXISTS' : 'MISSING'}`, consoleCallback);
+      
+      if (exists) {
+        try {
+          // Get segment duration for debugging
+          const durationArgs = [
+            "-v",
+            "quiet",
+            "-show_entries",
+            "format=duration",
+            "-of",
+            "csv=p=0",
+            segment,
+          ];
+          const segmentDuration = await runFfmpeg(durationArgs);
+          const durationFloat = parseFloat(segmentDuration.trim());
+          printStatus(`  Duration: ${durationFloat.toFixed(2)}s`, consoleCallback);
+        } catch (durationError) {
+          printWarning(`  Could not get duration for ${segmentName}: ${durationError.message}`, consoleCallback);
+        }
+      }
+    }
 
     const concatArgs = [
       "-f",
@@ -1105,10 +1255,13 @@ async function generateWorkoutVideo(
       fileList,
       "-c",
       "copy",
+      "-avoid_negative_ts",
+      "make_zero",
       "-y",
       outputFile,
     ];
 
+    printStatus("Starting video concatenation...", consoleCallback);
     await runFfmpeg(concatArgs);
 
     if (fs.existsSync(outputFile)) {
@@ -1190,6 +1343,7 @@ module.exports = {
   createCountdownSegment,
   createExerciseSegment,
   createStationChangeSegment,
+  getCelebrationVideos,
   createFileList,
   selectExercisesEvenly,
   generateWorkoutVideo,

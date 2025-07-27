@@ -35,6 +35,12 @@ contextBridge.exposeInMainWorld("api", {
     ipcRenderer.removeAllListeners('console-log');
   },
   
+  // Load saved settings
+  loadSettings: () => ipcRenderer.invoke("load-settings"),
+  
+  // Save settings
+  saveSettings: (settings) => ipcRenderer.invoke("save-settings", settings),
+  
   // Debug FFmpeg installation
   debugFfmpeg: () => ipcRenderer.invoke("debug-ffmpeg"),
   

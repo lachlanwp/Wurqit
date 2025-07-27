@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, Menu, dialog } = require("electron");
 const path = require("path");
 const { spawn } = require("child_process");
+const fs = require("fs");
 const {
   getCategories,
   getEquipment,
@@ -14,6 +15,33 @@ const nativeImage = require("electron").nativeImage;
 app.commandLine.appendSwitch("--max-old-space-size", "4096");
 app.commandLine.appendSwitch("--disable-gpu-sandbox");
 app.commandLine.appendSwitch("--no-sandbox");
+
+// Settings file path
+const settingsPath = path.join(app.getPath('userData'), 'workout-settings.json');
+
+// Function to load settings
+function loadSettings() {
+  try {
+    if (fs.existsSync(settingsPath)) {
+      const data = fs.readFileSync(settingsPath, 'utf8');
+      return JSON.parse(data);
+    }
+  } catch (error) {
+    console.error('Error loading settings:', error);
+  }
+  return null;
+}
+
+// Function to save settings
+function saveSettings(settings) {
+  try {
+    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+    return true;
+  } catch (error) {
+    console.error('Error saving settings:', error);
+    return false;
+  }
+}
 
 // Handle uncaught exceptions
 process.on("uncaughtException", (error) => {
@@ -188,6 +216,28 @@ ipcMain.handle("generate-workout-video", async (event, formData) => {
     );
   } catch (error) {
     throw new Error(`Failed to generate workout video: ${error.message}`);
+  }
+});
+
+// Handle loading settings
+ipcMain.handle("load-settings", async () => {
+  try {
+    return loadSettings();
+  } catch (error) {
+    throw new Error(`Failed to load settings: ${error.message}`);
+  }
+});
+
+// Handle saving settings
+ipcMain.handle("save-settings", async (event, settings) => {
+  try {
+    const success = saveSettings(settings);
+    if (!success) {
+      throw new Error("Failed to save settings");
+    }
+    return true;
+  } catch (error) {
+    throw new Error(`Failed to save settings: ${error.message}`);
   }
 });
 
