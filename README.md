@@ -22,7 +22,13 @@ Just set your:
 
 No subscriptions. No setup. No internet required. Just launch the app and start moving.
 
+# Easy to use UI
+
 ![User interface](media/images/screenshot.png)
+
+# Professional Videos
+
+![Videos](media/images/videos-promo.png)
 
 # Quick start
 
