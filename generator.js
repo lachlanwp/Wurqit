@@ -176,7 +176,7 @@ function getDesktopPath() {
 
   switch (platform) {
     case "win32": // Windows
-      return path.join(homeDir, "Desktop");
+      return getWindowsDesktopPath(homeDir);
     case "darwin": // macOS
       return path.join(homeDir, "Desktop");
     case "linux": // Linux
@@ -210,6 +210,101 @@ function getDesktopPath() {
     default:
       // Fallback to home directory for unknown platforms
       return homeDir;
+  }
+}
+
+// Function to get the real Desktop path on Windows, handling OneDrive scenarios
+function getWindowsDesktopPath(homeDir) {
+  try {
+    // Try to query the Windows registry for the Desktop folder path
+    const { execSync } = require("child_process");
+
+    // Query the registry for the Desktop folder path
+    // This handles OneDrive redirection and other custom Desktop locations
+    const command =
+      'reg query "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders" /v Desktop';
+
+    try {
+      const result = execSync(command, {
+        encoding: "utf8",
+        stdio: ["pipe", "pipe", "pipe"],
+      });
+
+      // Parse the registry output to extract the Desktop path
+      const lines = result.split("\n");
+      for (const line of lines) {
+        if (line.includes("Desktop") && line.includes("REG_EXPAND_SZ")) {
+          // Extract the path from the registry output
+          const match = line.match(/Desktop\s+REG_EXPAND_SZ\s+(.+)/);
+          if (match && match[1]) {
+            let desktopPath = match[1].trim();
+
+            // Expand environment variables in the path
+            desktopPath = desktopPath.replace(/%([^%]+)%/g, (match, envVar) => {
+              return process.env[envVar] || match;
+            });
+
+            // Verify the path exists
+            if (fs.existsSync(desktopPath)) {
+              return desktopPath;
+            }
+          }
+        }
+      }
+    } catch (registryError) {
+      // If registry query fails, fall back to alternative methods
+      console.log(`[DEBUG] Registry query failed: ${registryError.message}`);
+    }
+
+    // Alternative method: Check for OneDrive Desktop folder
+    const oneDriveDesktop = path.join(homeDir, "OneDrive", "Desktop");
+    if (fs.existsSync(oneDriveDesktop)) {
+      return oneDriveDesktop;
+    }
+
+    // Check for OneDrive - Personal Desktop folder
+    const oneDrivePersonalDesktop = path.join(
+      homeDir,
+      "OneDrive - Personal",
+      "Desktop"
+    );
+    if (fs.existsSync(oneDrivePersonalDesktop)) {
+      return oneDrivePersonalDesktop;
+    }
+
+    // Check for OneDrive - [Company] Desktop folder (common in enterprise environments)
+    const oneDriveFolders = fs
+      .readdirSync(homeDir, { withFileTypes: true })
+      .filter(
+        (dirent) => dirent.isDirectory() && dirent.name.startsWith("OneDrive")
+      )
+      .map((dirent) => dirent.name);
+
+    for (const oneDriveFolder of oneDriveFolders) {
+      const oneDriveDesktopPath = path.join(homeDir, oneDriveFolder, "Desktop");
+      if (fs.existsSync(oneDriveDesktopPath)) {
+        return oneDriveDesktopPath;
+      }
+    }
+
+    // Fallback to the default Desktop location
+    const defaultDesktop = path.join(homeDir, "Desktop");
+    if (fs.existsSync(defaultDesktop)) {
+      return defaultDesktop;
+    }
+
+    // If Desktop doesn't exist, create it
+    try {
+      fs.mkdirSync(defaultDesktop, { recursive: true });
+      return defaultDesktop;
+    } catch (error) {
+      // Final fallback to home directory
+      return homeDir;
+    }
+  } catch (error) {
+    console.log(`[DEBUG] Error getting Windows Desktop path: ${error.message}`);
+    // Fallback to the default Desktop location
+    return path.join(homeDir, "Desktop");
   }
 }
 
