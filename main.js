@@ -1,10 +1,9 @@
-const { app, BrowserWindow, ipcMain, Menu } = require("electron");
+const { app, BrowserWindow, ipcMain, Menu, dialog } = require("electron");
 const path = require("path");
 const { spawn } = require("child_process");
 const {
   getCategories,
   getEquipment,
-  getDesktopPath,
   generateWorkoutVideo,
   getFfmpegPath,
 } = require("./generator");
@@ -132,12 +131,22 @@ ipcMain.handle("get-equipment", async (event, categories) => {
   }
 });
 
-// Handle getting desktop path
-ipcMain.handle("get-desktop-path", async () => {
+
+
+// Handle folder selection dialog
+ipcMain.handle("select-output-folder", async (event) => {
   try {
-    return getDesktopPath();
+    const result = await dialog.showOpenDialog({
+      properties: ['openDirectory'],
+      title: 'Select folder to save workout video'
+    });
+    
+    if (!result.canceled && result.filePaths.length > 0) {
+      return result.filePaths[0];
+    }
+    return null; // User cancelled
   } catch (error) {
-    throw new Error(`Failed to get desktop path: ${error.message}`);
+    throw new Error(`Failed to select folder: ${error.message}`);
   }
 });
 
@@ -152,6 +161,7 @@ ipcMain.handle("generate-workout-video", async (event, formData) => {
       totalWorkoutDuration,
       categories,
       equipment,
+      outputPath,
     } = formData;
 
     // Create progress callback function
@@ -172,6 +182,7 @@ ipcMain.handle("generate-workout-video", async (event, formData) => {
       totalWorkoutDuration,
       categories,
       equipment,
+      outputPath,
       progressCallback,
       consoleCallback
     );

@@ -7,8 +7,10 @@ contextBridge.exposeInMainWorld("api", {
   // Get equipment for selected categories
   getEquipment: (categories) => ipcRenderer.invoke("get-equipment", categories),
   
-  // Get desktop path
-  getDesktopPath: () => ipcRenderer.invoke("get-desktop-path"),
+
+  
+  // Select output folder
+  selectOutputFolder: () => ipcRenderer.invoke("select-output-folder"),
   
   // Generate workout video
   generateWorkoutVideo: (formData) => ipcRenderer.invoke("generate-workout-video", formData),

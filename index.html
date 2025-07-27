@@ -366,6 +366,24 @@
           <div class="error" id="equipmentError"></div>
         </div>
 
+        <!-- Output Folder Selection -->
+        <div class="form-section">
+          <h3>📁 Output Folder</h3>
+          <div class="form-group">
+            <label for="outputFolder">Save video to:</label>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <input type="text" id="outputFolder" readonly placeholder="Click 'Choose Folder' to select where to save the video" style="flex: 1;">
+              <button type="button" id="selectFolderBtn" class="submit-btn" style="width: auto; margin: 0; padding: 8px 16px; font-size: 14px;">
+                📂 Choose Folder
+              </button>
+            </div>
+            <div class="error" id="outputFolderError"></div>
+            <small style="color: #666; margin-top: 5px; display: block;">
+              Please select a folder to save your workout video
+            </small>
+          </div>
+        </div>
+
         <button type="submit" class="submit-btn" id="submitBtn">
           🎬 Generate Workout Video
         </button>
@@ -538,6 +556,19 @@
         return Array.from(checkboxes).map((cb) => cb.value);
       }
 
+      // Handle folder selection
+      async function selectOutputFolder() {
+        try {
+          const selectedPath = await window.api.selectOutputFolder();
+          if (selectedPath) {
+            document.getElementById("outputFolder").value = selectedPath;
+            document.getElementById("outputFolderError").textContent = "";
+          }
+        } catch (error) {
+          document.getElementById("outputFolderError").textContent = `Error selecting folder: ${error.message}`;
+        }
+      }
+
       // Form validation
       function validateForm() {
         let isValid = true;
@@ -582,6 +613,14 @@
           isValid = false;
         }
 
+        // Validate output folder
+        const outputFolder = document.getElementById("outputFolder").value;
+        if (!outputFolder) {
+          document.getElementById("outputFolderError").textContent =
+            "Please select a folder to save the video";
+          isValid = false;
+        }
+
         return isValid;
       }
 
@@ -623,16 +662,9 @@
 
           // Show output location when we get the first progress update
           if (progress === 5) {
-            window.api
-              .getDesktopPath()
-              .then((desktopPath) => {
-                output.textContent += `\n📁 Output will be saved to your Desktop: ${desktopPath}`;
-                output.scrollTop = output.scrollHeight;
-              })
-              .catch((error) => {
-                output.textContent += `\n⚠️  Could not determine output location: ${error.message}`;
-                output.scrollTop = output.scrollHeight;
-              });
+            const selectedPath = document.getElementById("outputFolder").value;
+            output.textContent += `\n📁 Output will be saved to: ${selectedPath}`;
+            output.scrollTop = output.scrollHeight;
           }
         });
 
@@ -673,6 +705,7 @@
             ),
             categories: getSelectedCategories(),
             equipment: getSelectedEquipment(),
+            outputPath: document.getElementById("outputFolder").value,
           };
 
           const result = await window.api.generateWorkoutVideo(formData);
@@ -710,6 +743,11 @@
         document
           .getElementById("workoutForm")
           .addEventListener("submit", handleSubmit);
+
+        // Folder selection button
+        document
+          .getElementById("selectFolderBtn")
+          .addEventListener("click", selectOutputFolder);
 
         // Debug button
         document
