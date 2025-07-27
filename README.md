@@ -126,6 +126,14 @@ Then run
 yarn build
 ```
 
+# Privacy policy
+
+None of your data is stored or transmitted. We don't collection signups/logins and we don't use any analytics tracking. This app doesn't 'dial home' in anyway.
+
+# Terms and conditions
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 # Exercise data source
 
 https://github.com/yuhonas/free-exercise-db
