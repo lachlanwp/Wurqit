@@ -1,66 +1,68 @@
-// Test setup file
-const fs = require('fs');
-const path = require('path');
+// Jest setup file for Wurqit tests
 
-// Mock process.resourcesPath for tests
-if (!process.resourcesPath) {
-  process.resourcesPath = path.join(__dirname, '..');
-}
+const path = require("path");
 
-// Mock process.mainModule for tests
-if (!process.mainModule) {
-  process.mainModule = {
-    filename: __filename
-  };
-}
+// Import the mocked modules
+const mockFs = require("./__mocks__/fs");
+const mockSpawn = require("./__mocks__/child_process").spawn;
+const mockOs = require("./__mocks__/os");
 
-// Create mock videos directory structure for tests
-const mockVideosDir = path.join(__dirname, '..', 'media', 'videos');
-if (!fs.existsSync(mockVideosDir)) {
-  // Create the directory structure
-  const categories = ['strength', 'cardio', 'plyometrics', 'stretching'];
-  const equipment = {
-    strength: ['barbell', 'dumbbell', 'kettlebells', 'machine'],
-    cardio: ['machine', 'other'],
-    plyometrics: ['body only', 'dumbbell', 'medicine ball', 'other'],
-    stretching: ['body only', 'exercise ball', 'foam roll', 'other']
-  };
+// Setup global mocks
+global.fs = mockFs;
+global.path = path;
+global.os = mockOs;
 
-  // Create directories
-  categories.forEach(category => {
-    const categoryDir = path.join(mockVideosDir, category);
-    if (!fs.existsSync(categoryDir)) {
-      fs.mkdirSync(categoryDir, { recursive: true });
-    }
-    
-    if (equipment[category]) {
-      equipment[category].forEach(eq => {
-        const equipmentDir = path.join(categoryDir, eq);
-        if (!fs.existsSync(equipmentDir)) {
-          fs.mkdirSync(equipmentDir, { recursive: true });
-        }
-        
-        // Create a mock video file
-        const mockVideoPath = path.join(equipmentDir, 'mock-exercise.mp4');
-        if (!fs.existsSync(mockVideoPath)) {
-          fs.writeFileSync(mockVideoPath, 'mock video content');
-        }
-      });
-    }
-  });
-}
+// Mock process object
+global.process = {
+  ...process,
+  mainModule: null,
+  resourcesPath: "/mock/resources/path",
+  cwd: jest.fn(() => "/mock/current/directory"),
+  memoryUsage: jest.fn(() => ({
+    heapUsed: 100 * 1024 * 1024, // 100MB
+  })),
+};
 
-// Mock console methods to prevent output during tests
-const originalConsole = { ...console };
+// Mock console methods to avoid cluttering test output
 global.console = {
   ...console,
   log: jest.fn(),
   warn: jest.fn(),
   error: jest.fn(),
-  debug: jest.fn()
 };
 
-// Restore console after tests
-afterAll(() => {
-  global.console = originalConsole;
-}); 
+// Setup default mock implementations
+beforeEach(() => {
+  // Reset all mocks
+  jest.clearAllMocks();
+
+  // Setup default fs mock implementations
+  mockFs.existsSync.mockReturnValue(true);
+  mockFs.readdirSync.mockReturnValue([]);
+  mockFs.statSync.mockReturnValue({ isDirectory: () => true });
+  mockFs.mkdirSync.mockImplementation(() => {});
+  mockFs.writeFileSync.mockImplementation(() => {});
+  mockFs.readFileSync.mockReturnValue("mock file content");
+  mockFs.rmSync.mockImplementation(() => {});
+
+  // Setup default os mock implementations
+  mockOs.platform.mockReturnValue("darwin");
+  mockOs.arch.mockReturnValue("x64");
+  mockOs.homedir.mockReturnValue("/mock/home");
+  mockOs.tmpdir.mockReturnValue("/tmp");
+
+  // Setup default process mock
+  global.process.mainModule = null;
+  global.process.resourcesPath = "/mock/resources/path";
+  global.process.cwd.mockReturnValue("/mock/current/directory");
+  global.process.memoryUsage.mockReturnValue({
+    heapUsed: 100 * 1024 * 1024, // 100MB
+  });
+});
+
+// Export mocks for use in tests
+module.exports = {
+  mockFs,
+  mockSpawn,
+  mockOs,
+};

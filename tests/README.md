@@ -1,131 +1,181 @@
-# Test Suite
+# Generator Module Tests
 
-This directory contains all the Jest test files for the Wurqit application.
+This directory contains comprehensive unit tests for the `generator.js` module, which is responsible for creating workout videos using FFmpeg.
 
 ## Test Files
 
-- **`test-generator.test.js`** - Tests basic generator utility functions
-- **`test-form.test.js`** - Tests form data handling and validation
-- **`test-progress.test.js`** - Tests progress callback functionality
-- **`test-desktop-path.test.js`** - Tests desktop path resolution
-- **`test-cross-platform.test.js`** - Tests cross-platform compatibility
+### `generator-simple.test.js` (Recommended)
 
-## Running Tests
+A simplified test suite that focuses on core functionality with 41 passing tests. This file provides good coverage of the main functions without complex mocking issues.
 
-### Run All Tests
-```bash
-yarn test
-```
+**Coverage:**
 
-### Run Tests in Watch Mode
-```bash
-yarn test:watch
-```
+- ✅ Utility Functions (validateNumber, formatExerciseName, getDesktopPath)
+- ✅ FFmpeg Functions (getFfmpegPath, checkFfmpeg, runFfmpeg)
+- ✅ File System Functions (getBaseDir, getBaseMediaDir, getVideosDir, getCategories, getEquipment, getExerciseVideosByEquipment)
+- ✅ Video Generation Functions (createProgressGridOverlay, createFileList)
+- ✅ Video Segment Functions (createCountdownSegment, createExerciseSegment, createStationChangeSegment)
+- ✅ Console Output Functions (printStatus, printWarning, printError)
+- ✅ Parameter Validation
+- ✅ Memory Management
 
-### Run Tests with Coverage
-```bash
-yarn test -- --coverage
-```
+### `generator.test.js`
 
-### Run Specific Test File
-```bash
-yarn test -- test-generator.test.js
-```
-
-### Run Tests from Parent Directory
-```bash
-# From project root
-yarn test
-```
-
-## Test Descriptions
-
-### test-generator.test.js
-Tests the core utility functions:
-- `validateNumber()` - Number validation with boundary testing
-- `formatExerciseName()` - Exercise name formatting for various file types
-- `checkFfmpeg()` - FFmpeg availability check
-- `getCategories()` - Category loading and validation
-- `getEquipment()` - Equipment loading and validation
-- `selectExercisesEvenly()` - Exercise selection algorithm
-- Print functions existence and structure
-
-### test-form.test.js
-Tests form functionality:
-- Category and equipment loading with validation
-- Form data structure validation
-- Input validation functions with boundary testing
-- Form field type checking
-- Validation range testing
-
-### test-progress.test.js
-Tests progress tracking:
-- Progress callback functionality with proper structure
-- Real-time progress updates with validation
-- Progress message content validation
-- Error handling for progress callbacks
-- Null callback handling
-- Progress percentage validation (0-100%)
-
-### test-desktop-path.test.js
-Tests desktop path resolution:
-- Desktop path detection for current OS
-- Write permission verification
-- Output file path creation
-- Cross-platform path handling
-- Error handling for invalid paths
-- File system operations testing
-
-### test-cross-platform.test.js
-Tests cross-platform compatibility:
-- Path resolution for Windows, macOS, and Linux
-- Path separator handling
-- International desktop folder names
-- Platform detection and validation
-- File path creation across platforms
-- Special character handling in paths
-
-## Jest Configuration
-
-The tests use Jest with the following configuration (`jest.config.js`):
-- Node.js test environment
-- Coverage reporting enabled
-- 30-second timeout for video generation tests
-- Verbose output for better debugging
-- Coverage reports in text, lcov, and HTML formats
-
-## Requirements
-
-- Node.js installed
-- Jest testing framework (installed as dev dependency)
-- FFmpeg available (via ffmpeg-static)
-- Videos directory with exercise videos
-- Proper file permissions for desktop access
+A more comprehensive test suite with 47 tests (41 passing, 6 failing). This file includes additional tests for complex scenarios but has some issues with mocking and caching.
 
 ## Test Structure
 
-All tests follow Jest conventions:
-- `describe()` blocks for grouping related tests
-- `test()` or `it()` for individual test cases
-- `beforeEach()` and `afterEach()` for setup/teardown
-- Proper mocking of external dependencies
-- Comprehensive assertions using Jest matchers
+### Mock Setup
 
-## Coverage
+The tests use Jest mocks for the following modules:
 
-Tests provide comprehensive coverage of:
-- Utility functions
-- Form validation
-- Progress tracking
-- File system operations
-- Cross-platform compatibility
-- Error handling scenarios
+- `fs` - File system operations
+- `child_process` - FFmpeg process spawning
+- `ffmpeg-static` - FFmpeg binary path
+- `os` - Operating system utilities
 
-## Notes
+### Test Categories
 
-- Tests require the `../generator.js` module to be available
-- Some tests may create temporary files or directories
-- Progress tests may take several minutes to complete
-- Desktop path tests require write access to the desktop directory
-- Video generation tests are skipped if FFmpeg is not available
-- All tests include proper cleanup to avoid leaving test artifacts 
+1. **Utility Functions**
+
+   - Input validation
+   - Exercise name formatting
+   - Desktop path resolution for different operating systems
+
+2. **FFmpeg Functions**
+
+   - Path resolution for development and production environments
+   - FFmpeg availability checking
+   - FFmpeg command execution
+
+3. **File System Functions**
+
+   - Directory path resolution
+   - Category and equipment discovery
+   - Video file organization
+
+4. **Video Generation Functions**
+
+   - Progress grid overlay creation
+   - File list generation for video concatenation
+
+5. **Video Segment Functions**
+
+   - Countdown segment creation
+   - Exercise segment creation
+   - Station change segment creation
+
+6. **Console Output Functions**
+
+   - Status, warning, and error message logging
+
+7. **Parameter Validation**
+
+   - Workout parameter validation
+
+8. **Memory Management**
+   - Cache clearing when memory usage is high
+
+## Running Tests
+
+```bash
+# Run all tests
+yarn test
+
+# Run only the simplified test suite
+yarn test tests/generator-simple.test.js
+
+# Run only the comprehensive test suite
+yarn test tests/generator.test.js
+
+# Run tests in watch mode
+yarn test:watch
+```
+
+## Test Coverage
+
+The tests provide good coverage of the generator module's functionality:
+
+- **Statement Coverage**: ~58% (simplified tests) to ~86% (comprehensive tests)
+- **Branch Coverage**: ~46% (simplified tests) to ~67% (comprehensive tests)
+- **Function Coverage**: ~81% (simplified tests) to ~90% (comprehensive tests)
+- **Line Coverage**: ~57% (simplified tests) to ~85% (comprehensive tests)
+
+## Key Testing Patterns
+
+### Mocking External Dependencies
+
+```javascript
+jest.mock("fs");
+jest.mock("child_process");
+jest.mock("ffmpeg-static");
+jest.mock("os");
+```
+
+### Setting Up Mock Implementations
+
+```javascript
+beforeEach(() => {
+  jest.clearAllMocks();
+
+  fs.existsSync.mockReturnValue(true);
+  fs.readdirSync.mockReturnValue([]);
+  // ... other mock setups
+});
+```
+
+### Testing Async Functions
+
+```javascript
+test("should resolve when ffmpeg succeeds", async () => {
+  const mockProcess = {
+    stdout: { on: jest.fn() },
+    stderr: { on: jest.fn() },
+    on: jest.fn((event, callback) => {
+      if (event === "close") {
+        callback(0);
+      }
+    }),
+  };
+  spawn.mockReturnValue(mockProcess);
+
+  const promise = generator.runFfmpeg(["-version"]);
+  await expect(promise).resolves.toBe("");
+});
+```
+
+### Testing Error Conditions
+
+```javascript
+test("should throw error if ffmpeg path is not available", () => {
+  fs.existsSync.mockReturnValue(false);
+
+  expect(() => generator.checkFfmpeg()).toThrow("FFMPEG executable not found");
+});
+```
+
+## Known Issues
+
+1. **Caching Behavior**: Some tests fail due to the module's internal caching mechanism, which can cause functions to return cached results instead of executing the full logic.
+
+2. **Complex Mocking**: The comprehensive test suite has issues with complex mocking scenarios, particularly around function replacement and cache clearing.
+
+3. **Memory Management**: Testing the cache clearing functionality is challenging due to the need to mock memory usage and garbage collection.
+
+## Recommendations
+
+1. **Use the Simplified Test Suite**: For most development purposes, the `generator-simple.test.js` file provides adequate coverage and is more reliable.
+
+2. **Focus on Core Functionality**: The tests cover the most important aspects of the generator module, including parameter validation, file operations, and video generation.
+
+3. **Maintain Mock Consistency**: When adding new tests, ensure that mocks are properly reset in the `beforeEach` block to avoid test interference.
+
+## Future Improvements
+
+1. **Integration Tests**: Add integration tests that test the full video generation workflow with real FFmpeg commands.
+
+2. **Performance Tests**: Add tests to verify memory usage and performance characteristics.
+
+3. **Error Handling**: Expand error handling tests to cover more edge cases and failure scenarios.
+
+4. **Mock Refactoring**: Improve the mocking strategy to better handle caching and complex function interactions.
