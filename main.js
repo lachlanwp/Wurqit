@@ -102,7 +102,7 @@ function createWindow() {
           label: "Learn More",
           click: async () => {
             const { shell } = require("electron");
-            await shell.openExternal("https://www.lachlanpearce.com/");
+            await shell.openExternal("https://wurqit.com/");
           },
         },
       ],
