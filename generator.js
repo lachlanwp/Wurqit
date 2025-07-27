@@ -401,7 +401,7 @@ function runFfmpeg(args) {
   });
 }
 
-// Function to create progress grid visualization using FFmpeg drawtext
+// Function to create progress grid visualization using colored rectangles
 function createProgressGridOverlay(
   currentStation,
   currentSet,
@@ -410,144 +410,49 @@ function createProgressGridOverlay(
 ) {
   const videoWidth = 1920;
   const videoHeight = 1080;
-  const topMargin = 50;
-  const bottomMargin = 50;
-  const leftMargin = 50;
-  const rightMargin = 50;
-
-  // Calculate total cells needed (all sets for all stations)
-  const totalCells = totalStations * setsPerStation;
-
-  // Calculate available width for the grid
-  const availableWidth = videoWidth - leftMargin - rightMargin;
-
-  // Set fixed cell width to 15px
-  const cellWidth = 15;
-
-  // Calculate how many cells can fit per row
-  const cellsPerRow = Math.floor(availableWidth / cellWidth);
-
-  // Calculate number of rows needed
-  const rowsNeeded = Math.ceil(totalCells / cellsPerRow);
-  const cellHeight = 40;
-
-  // Position grid at the top of the screen
   const gridTopMargin = 50;
 
-  // Calculate total grid width including extra spacing between stations
-  const extraSpacingCells = (totalStations - 1) * 2; // Two extra cells per station (except last)
-  const totalGridWidth = (totalCells + extraSpacingCells) * cellWidth;
+  // Cell dimensions (matching PNG images)
+  const cellWidth = 20;
+  const cellHeight = 40;
+  const cellMargin = 2; // 2px margin between cells in a station
+  const stationMargin = 20; // 20px margin between stations
+
+  // Calculate total grid width
+  const totalGridWidth = totalStations * setsPerStation * cellWidth + 
+                        (totalStations - 1) * stationMargin + 
+                        (totalStations * (setsPerStation - 1)) * cellMargin;
+  
+  // Calculate starting X position to center the grid
   const gridStartX = Math.floor((videoWidth - totalGridWidth) / 2);
 
-  // --- First pass: determine number of cells (including spacing) per row ---
-  const rowCellCounts = [];
-  let simCellIndex = 0;
-  let simRow = 0;
-
-  for (let station = 0; station < totalStations; station++) {
-    for (let set = 1; set <= setsPerStation; set++) {
-      if (simCellIndex % cellsPerRow === 0) {
-        simRow = rowCellCounts.length;
-        rowCellCounts.push(0);
-      }
-      rowCellCounts[simRow]++;
-
-      if (set === setsPerStation && station < totalStations - 1) {
-        // Add 2 extra cells for spacing
-        for (let s = 1; s <= 2; s++) {
-          simCellIndex++;
-          if (simCellIndex % cellsPerRow === 0) {
-            simRow = rowCellCounts.length;
-            rowCellCounts.push(0);
-          }
-          rowCellCounts[simRow]++;
-        }
-      }
-      simCellIndex++;
-    }
-  }
-
-  // --- Second pass: draw cells, using per-row centering ---
-  let cellIndex = 0;
-  let row = 0;
-  let rowCol = 0;
   const filterParts = [];
+  let currentX = gridStartX;
 
   for (let station = 0; station < totalStations; station++) {
     for (let set = 1; set <= setsPerStation; set++) {
-      row = Math.floor(cellIndex / cellsPerRow);
-      if (cellIndex % cellsPerRow === 0) {
-        rowCol = 0;
-      }
-
-      const rowCells = rowCellCounts[row];
-      const rowWidth = rowCells * cellWidth;
-      const rowStartX = Math.floor((videoWidth - rowWidth) / 2);
-      const x = rowStartX + rowCol * cellWidth;
-      const y = gridTopMargin + row * cellHeight;
-
       // Determine cell color based on status
-      let cellColor = "gray";
-      if (station === currentStation && set === currentSet) {
-        cellColor = "lightblue";
-      } else if (
-        station < currentStation ||
-        (station === currentStation && set < currentSet)
-      ) {
+      let cellColor;
+      if (station < currentStation || (station === currentStation && set < currentSet)) {
+        // Completed set - use a darker color to represent "full"
         cellColor = "darkblue";
+      } else {
+        // Not yet completed set - use a lighter color to represent "empty"
+        cellColor = "gray";
       }
 
-      // Draw cell box (no border)
+      // Draw cell rectangle
       filterParts.push(
-        `drawbox=x=${x}:y=${y}:w=${cellWidth}:h=${cellHeight}:color=${cellColor}:t=fill`
+        `drawbox=x=${currentX}:y=${gridTopMargin}:w=${cellWidth}:h=${cellHeight}:color=${cellColor}:t=fill`
       );
 
-      // Add set number at bottom of cell (centered)
-      const setTextX = x + Math.floor(cellWidth / 2);
-      const setTextY = y + cellHeight - 5;
-      filterParts.push(
-        `drawtext=text='${set}':fontcolor=white:fontsize=12:x=${setTextX}-text_w/2:y=${setTextY}:box=1:boxcolor=black@0.5:boxborderw=1:line_spacing=0:fix_bounds=1`
-      );
-
-      // Add extra horizontal padding between stations (except after last station)
-      if (set === setsPerStation && station < totalStations - 1) {
-        rowCol += 2;
-        cellIndex += 2; // Skip 2 extra cells for 30px spacing
-      }
-      rowCol++;
-      cellIndex++;
+      // Move to next cell position
+      currentX += cellWidth + cellMargin;
     }
-  }
 
-  // --- Draw station numbers (centered above each group) ---
-  // Redo cellIndex for station label placement
-  cellIndex = 0;
-  for (let station = 0; station < totalStations; station++) {
-    row = Math.floor(cellIndex / cellsPerRow);
-    const col = cellIndex % cellsPerRow;
-    const rowCells = rowCellCounts[row];
-    const rowWidth = rowCells * cellWidth;
-    const rowStartX = Math.floor((videoWidth - rowWidth) / 2);
-    const stationStartCol = col;
-    const stationEndCol = col + setsPerStation - 1;
-    const stationStartX = rowStartX + stationStartCol * cellWidth;
-    const stationEndX = rowStartX + (stationEndCol + 1) * cellWidth;
-    const stationCenterX = Math.floor((stationStartX + stationEndX) / 2);
-    const stationTextX = stationCenterX;
-    const stationTextY = gridTopMargin - 20 + row * cellHeight;
-
-    filterParts.push(
-      `drawtext=text='${
-        station + 1
-      }':fontcolor=white:fontsize=14:x=${stationTextX}-text_w/2:y=${stationTextY}:box=1:boxcolor=black@0.7:boxborderw=2:line_spacing=0:fix_bounds=1`
-    );
-
-    // Advance cellIndex for this station
-    for (let set = 1; set <= setsPerStation; set++) {
-      if (set === setsPerStation && station < totalStations - 1) {
-        cellIndex += 2;
-      }
-      cellIndex++;
+    // Add station margin (except after last station)
+    if (station < totalStations - 1) {
+      currentX += stationMargin - cellMargin; // Subtract cellMargin since we already added it
     }
   }
 
@@ -569,6 +474,14 @@ async function createCountdownSegment(
   // Check if BEEP.mp3 exists
   const beepFile = path.join(getBaseMediaDir(), "audio", "BEEP.mp3");
 
+  // Get Oswald font path
+  const oswaldFontPath = path.join(getBaseMediaDir(), "images", "Oswald.ttf");
+  
+  // Check if font file exists
+  if (!fs.existsSync(oswaldFontPath)) {
+    throw new Error(`Oswald font not found: ${oswaldFontPath}`);
+  }
+
   // Choose background color based on text
   let bgColor = "black";
   if (text === "REST") {
@@ -585,7 +498,7 @@ async function createCountdownSegment(
     `color=c=${bgColor}:size=1920x1080:duration=${duration}`,
     ...(fs.existsSync(beepFile) ? ["-i", beepFile] : []),
     "-filter_complex",
-    `[0:v]drawtext=text='${text}':fontcolor=white:fontsize=72:x=(w-text_w)/2:y=(h-text_h)/2,drawtext=text='%{eif\\:(${duration}-t)\\:d\\:2}':fontcolor=white:fontsize=120:x=(w-text_w)/2:y=(h-text_h)/2+100[v]${
+    `[0:v]drawtext=text='${text}':fontfile='${oswaldFontPath.replace(/\\/g, '/')}':fontcolor=white:fontsize=72:x=(w-text_w)/2:y=(h-text_h)/2,drawtext=text='%{eif\\:(${duration}-t)\\:d\\:2}':fontfile='${oswaldFontPath.replace(/\\/g, '/')}':fontcolor=white:fontsize=120:x=(w-text_w)/2:y=(h-text_h)/2+100[v]${
       fs.existsSync(beepFile) ? ";[1:a]adelay=0|0[beep]" : ""
     }`,
     "-map",
@@ -652,13 +565,23 @@ async function createExerciseSegment(
   // Check if BEEP.mp3 exists
   const beepFile = path.join(getBaseMediaDir(), "audio", "BEEP.mp3");
 
-  // Create progress grid overlay
+
+
+  // Create progress grid overlay filter
   const gridOverlay = createProgressGridOverlay(
     currentStation,
     currentSet,
     totalStations,
     setsPerStation
   );
+
+  // Get Oswald font path
+  const oswaldFontPath = path.join(getBaseMediaDir(), "images", "Oswald.ttf");
+  
+  // Check if font file exists
+  if (!fs.existsSync(oswaldFontPath)) {
+    throw new Error(`Oswald font not found: ${oswaldFontPath}`);
+  }
 
   // Create exercise video with looped video, exercise name, progress grid, countdown, and beep sound
   const args = [
@@ -674,7 +597,7 @@ async function createExerciseSegment(
     `color=c=darkgreen:size=1920x1080:duration=${duration}`,
     ...(fs.existsSync(beepFile) ? ["-i", beepFile] : []),
     "-filter_complex",
-    `[0:v]scale=-1:600:force_original_aspect_ratio=decrease[scaled];[1:v][scaled]overlay=(W-w)/2:(H-h)/2,drawtext=text='${exerciseName}':fontcolor=white:fontsize=60:x=(w-text_w)/2:y=h-200,drawtext=text='%{eif\\:(${duration}-t)\\:d\\:2}':fontcolor=white:fontsize=72:x=(w-text_w)/2:y=h-100,${gridOverlay}[v]${
+    `[0:v]scale=-1:600:force_original_aspect_ratio=decrease[scaled];[1:v][scaled]overlay=(W-w)/2:(H-h)/2,drawtext=text='${exerciseName}':fontfile='${oswaldFontPath.replace(/\\/g, '/')}':fontcolor=white:fontsize=60:x=(w-text_w)/2:y=h-200,drawtext=text='%{eif\\:(${duration}-t)\\:d\\:2}':fontfile='${oswaldFontPath.replace(/\\/g, '/')}':fontcolor=white:fontsize=72:x=(w-text_w)/2:y=h-100,${gridOverlay}[v]${
       fs.existsSync(beepFile) ? ";[2:a]adelay=0|0[beep]" : ""
     }`,
     "-map",
@@ -740,6 +663,14 @@ async function createStationChangeSegment(
   // Check if BEEP.mp3 exists
   const beepFile = path.join(getBaseMediaDir(), "audio", "BEEP.mp3");
 
+  // Get Oswald font path
+  const oswaldFontPath = path.join(getBaseMediaDir(), "images", "Oswald.ttf");
+  
+  // Check if font file exists
+  if (!fs.existsSync(oswaldFontPath)) {
+    throw new Error(`Oswald font not found: ${oswaldFontPath}`);
+  }
+
   // Create station change video with preview of next exercise
   const args = [
     "-stream_loop",
@@ -754,7 +685,7 @@ async function createStationChangeSegment(
     `color=c=black:size=1920x1080:duration=${duration}`,
     ...(fs.existsSync(beepFile) ? ["-i", beepFile] : []),
     "-filter_complex",
-    `[0:v]scale=600:600:force_original_aspect_ratio=decrease,pad=600:600:(ow-iw)/2:(oh-ih)/2[scaled];[1:v][scaled]overlay=(W-w)/2:(H-h)/2-150,drawtext=text='NEXT EXERCISE':fontcolor=white:fontsize=72:x=(w-text_w)/2:y=50,drawtext=text='${nextExerciseName}':fontcolor=white:fontsize=48:x=(w-text_w)/2:y=150,drawtext=text='%{eif\\:(${duration}-t)\\:d\\:2}':fontcolor=white:fontsize=120:x=(w-text_w)/2:y=h-100[v]${
+    `[0:v]scale=600:600:force_original_aspect_ratio=decrease,pad=600:600:(ow-iw)/2:(oh-ih)/2[scaled];[1:v][scaled]overlay=(W-w)/2:(H-h)/2-150,drawtext=text='NEXT EXERCISE':fontfile='${oswaldFontPath.replace(/\\/g, '/')}':fontcolor=white:fontsize=72:x=(w-text_w)/2:y=50,drawtext=text='${nextExerciseName}':fontfile='${oswaldFontPath.replace(/\\/g, '/')}':fontcolor=white:fontsize=48:x=(w-text_w)/2:y=150,drawtext=text='%{eif\\:(${duration}-t)\\:d\\:2}':fontfile='${oswaldFontPath.replace(/\\/g, '/')}':fontcolor=white:fontsize=120:x=(w-text_w)/2:y=h-100[v]${
       fs.existsSync(beepFile) ? ";[2:a]adelay=0|0[beep]" : ""
     }`,
     "-map",

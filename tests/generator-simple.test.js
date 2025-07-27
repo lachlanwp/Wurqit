@@ -244,7 +244,6 @@ describe("Generator Module - Simplified Tests", () => {
         const result = generator.createProgressGridOverlay(0, 1, 3, 2);
         expect(typeof result).toBe("string");
         expect(result).toContain("drawbox");
-        expect(result).toContain("drawtext");
       });
 
       test("should handle different grid configurations", () => {
