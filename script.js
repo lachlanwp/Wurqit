@@ -408,6 +408,9 @@ async function handleSubmit(event) {
     progressFill.style.width = `${progress}%`;
     progressMessage.textContent = message;
 
+    // Update page title with progress
+    document.title = `WURQIT - ${progress}% - ${message}`;
+
     // Add to output log
     output.textContent += `\n[${progress}%] ${message}`;
     output.scrollTop = output.scrollHeight;
@@ -473,6 +476,9 @@ async function handleSubmit(event) {
     
     submitBtn.disabled = false;
     submitBtn.textContent = "🎬 Generate Workout Video";
+
+    // Reset page title
+    document.title = "WURQIT";
 
     // Hide progress container after a delay
     setTimeout(() => {
