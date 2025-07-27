@@ -576,6 +576,33 @@
         }
       }
 
+      // Set form readonly state
+      function setFormReadonly(readonly) {
+        // Get all form elements that should be disabled
+        const formElements = [
+          ...document.querySelectorAll('select'),
+          ...document.querySelectorAll('input[type="checkbox"]'),
+          document.getElementById('outputFolder'),
+          document.getElementById('selectFolderBtn')
+        ];
+
+        formElements.forEach(element => {
+          element.disabled = readonly;
+        });
+
+        // Add visual feedback for readonly state
+        const formSections = document.querySelectorAll('.form-section');
+        formSections.forEach(section => {
+          if (readonly) {
+            section.style.opacity = '0.6';
+            section.style.pointerEvents = 'none';
+          } else {
+            section.style.opacity = '1';
+            section.style.pointerEvents = 'auto';
+          }
+        });
+      }
+
       // Form validation
       function validateForm() {
         let isValid = true;
@@ -645,6 +672,9 @@
         const progressText = document.getElementById("progressText");
         const progressFill = document.getElementById("progressFill");
         const progressMessage = document.getElementById("progressMessage");
+
+        // Disable form elements
+        setFormReadonly(true);
 
         submitBtn.disabled = true;
         submitBtn.textContent = "🔄 Generating...";
@@ -720,6 +750,9 @@
         } catch (error) {
           output.textContent += `\n❌ Error: ${error.message}`;
         } finally {
+          // Re-enable form elements
+          setFormReadonly(false);
+          
           submitBtn.disabled = false;
           submitBtn.textContent = "🎬 Generate Workout Video";
 

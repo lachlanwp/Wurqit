@@ -427,6 +427,14 @@ function createProgressGridOverlay(
   const gridStartX = Math.floor((videoWidth - totalGridWidth) / 2);
 
   const filterParts = [];
+  
+  // Add black transparent background behind the entire progress grid
+  const gridHeight = cellHeight; // Single row height
+  const gridPadding = 10; // Padding around the grid
+  filterParts.push(
+    `drawbox=x=${gridStartX - gridPadding}:y=${gridTopMargin - gridPadding}:w=${totalGridWidth + 2 * gridPadding}:h=${gridHeight + 2 * gridPadding}:color=black@0.5:t=fill`
+  );
+  
   let currentX = gridStartX;
 
   for (let station = 0; station < totalStations; station++) {
@@ -597,7 +605,7 @@ async function createExerciseSegment(
     `color=c=darkgreen:size=1920x1080:duration=${duration}`,
     ...(fs.existsSync(beepFile) ? ["-i", beepFile] : []),
     "-filter_complex",
-    `[0:v]scale=-1:600:force_original_aspect_ratio=decrease[scaled];[1:v][scaled]overlay=(W-w)/2:(H-h)/2,drawtext=text='${exerciseName}':fontfile='${oswaldFontPath.replace(/\\/g, '/')}':fontcolor=white:fontsize=60:x=(w-text_w)/2:y=h-200,drawtext=text='%{eif\\:(${duration}-t)\\:d\\:2}':fontfile='${oswaldFontPath.replace(/\\/g, '/')}':fontcolor=white:fontsize=72:x=(w-text_w)/2:y=h-100,${gridOverlay}[v]${
+    `[0:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black[scaled];[1:v][scaled]overlay=(W-w)/2:(H-h)/2,drawtext=text='${exerciseName}':fontfile='${oswaldFontPath.replace(/\\/g, '/')}':fontcolor=white:fontsize=60:x=(w-text_w)/2:y=h-200:box=1:boxcolor=black@0.7:boxborderw=5,drawtext=text='%{eif\\:(${duration}-t)\\:d\\:2}':fontfile='${oswaldFontPath.replace(/\\/g, '/')}':fontcolor=white:fontsize=72:x=(w-text_w)/2:y=h-100:box=1:boxcolor=black@0.7:boxborderw=5,${gridOverlay}[v]${
       fs.existsSync(beepFile) ? ";[2:a]adelay=0|0[beep]" : ""
     }`,
     "-map",
