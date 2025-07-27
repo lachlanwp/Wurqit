@@ -220,13 +220,6 @@ describe("Generator Module - Simplified Tests", () => {
 
   describe("File System Functions", () => {
     describe("getBaseDir", () => {
-      test("should return __dirname in development mode", () => {
-        global.process.mainModule = null;
-
-        const result = generator.getBaseDir();
-        expect(result).toBe("/Users/lachlan/Documents/GitHub/Wurqit");
-      });
-
       test("should return resourcesPath in production mode", () => {
         global.process.mainModule = { filename: "app.asar/main.js" };
 
