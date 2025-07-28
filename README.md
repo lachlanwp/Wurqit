@@ -26,7 +26,7 @@ No subscriptions. No setup. No internet required. Just launch the app and start 
 
 ![User interface](media/images/screenshot.png)
 
-# Professional Videos
+# Professional videos
 
 ![Videos](media/images/videos-promo.png)
 
