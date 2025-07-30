@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>WURQIT</title>
+    <!-- Favicons and App Icons -->
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="media/icon/windows/favicon-32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="57x57"
+      href="media/icon/windows/favicon-57.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="72x72"
+      href="media/icon/windows/favicon-72.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="96x96"
+      href="media/icon/windows/favicon-96.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="120x120"
+      href="media/icon/windows/favicon-120.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="128x128"
+      href="media/icon/windows/favicon-128.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="144x144"
+      href="media/icon/windows/favicon-144.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="152x152"
+      href="media/icon/windows/favicon-152.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="195x195"
+      href="media/icon/windows/favicon-195.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="228x228"
+      href="media/icon/windows/favicon-228.png"
+    />
+    <link rel="shortcut icon" href="media/icon/windows/favicon.ico" />
+    <link
+      rel="apple-touch-icon"
+      sizes="120x120"
+      href="media/icon/windows/favicon-120.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="152x152"
+      href="media/icon/windows/favicon-152.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="media/icon/windows/favicon-195.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="228x228"
+      href="media/icon/windows/favicon-228.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="media/icon/windows/favicon-32.png"
+    />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="msapplication-TileColor" content="#ffffff" />
+    <meta
+      name="msapplication-TileImage"
+      content="media/icon/windows/favicon-144.png"
+    />
+    <meta name="theme-color" content="#ffffff" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self';">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="app-header">
+        <img src="icon.png" alt="WURQIT App Icon" class="app-icon" />
+        <h1 class="app-title">WURQIT</h1>
+      </div>
+
+      <form id="workoutForm">
+        <!-- Duration Settings -->
+        <div class="form-section">
+          <h3>⏱️ Duration Settings</h3>
+
+          <div class="form-group">
+            <label for="workDuration">Work Duration:</label>
+            <select id="workDuration" required>
+              <option value="">Select work duration</option>
+            </select>
+            <div class="error" id="workDurationError"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="restDuration">Rest Duration:</label>
+            <select id="restDuration" required>
+              <option value="">Select rest duration</option>
+            </select>
+            <div class="error" id="restDurationError"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="setsPerStation">Number of Sets:</label>
+            <select id="setsPerStation" required>
+              <option value="">Select number of sets</option>
+            </select>
+            <div class="error" id="setsPerStationError"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="stationRest">Station Rest:</label>
+            <select id="stationRest" required>
+              <option value="">Select station rest</option>
+            </select>
+            <div class="error" id="stationRestError"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="totalWorkoutDuration">Total Workout Duration:</label>
+            <select id="totalWorkoutDuration" required>
+              <option value="">Select total workout duration</option>
+            </select>
+            <div class="error" id="totalWorkoutDurationError"></div>
+          </div>
+        </div>
+
+        <!-- Exercise Categories -->
+        <div class="form-section">
+          <h3>📂 Exercise Categories</h3>
+          <div id="categoriesContainer">
+            <div class="loading">Loading categories...</div>
+          </div>
+          <div class="error" id="categoriesError"></div>
+        </div>
+
+        <!-- Equipment -->
+        <div class="form-section">
+          <h3>🏋️ Equipment</h3>
+          <div id="equipmentContainer">
+            <div class="loading">Loading equipment...</div>
+          </div>
+          <div class="error" id="equipmentError"></div>
+        </div>
+
+        <!-- Output Folder Selection -->
+        <div class="form-section">
+          <h3>📁 Output Folder</h3>
+          <div class="form-group">
+            <label for="outputFolder">Save video to:</label>
+            <div class="folder-input-container">
+              <input type="text" id="outputFolder" class="folder-input" readonly placeholder="Click 'Choose Folder' to select where to save the video">
+              <button type="button" id="selectFolderBtn" class="submit-btn folder-button">
+                📂 Choose Folder
+              </button>
+            </div>
+            <div class="error" id="outputFolderError"></div>
+            <small class="folder-help-text">
+              Please select a folder to save your workout video
+            </small>
+          </div>
+        </div>
+
+        <button type="submit" class="submit-btn" id="submitBtn">
+          🎬 Generate Workout Video
+        </button>
+        <!-- <button type="button" class="submit-btn" id="debugBtn" style="margin-left: 10px; background-color: #6c757d;">
+        🔧 Debug FFmpeg
+      </button> -->
+      </form>
+
+      <!-- Progress Container -->
+      <div class="progress-container" id="progressContainer">
+        <div class="progress-text" id="progressText">0%</div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-message" id="progressMessage">Initializing...</div>
+      </div>
+
+      <div id="output"></div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
