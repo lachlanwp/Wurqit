@@ -61,12 +61,14 @@ This is an Electron desktop application. All dependencies are bundled with the a
         - images    | contains images for the app
     - tests         | contains tests for the main app code
     - .env          | the environment variables used for builds
-    - generator.js  | the main JS for generating the videos
+    - src/
+        - generator.ts  | the main TypeScript for generating the videos
+        - main.ts       | the entry point of the app
+        - preload.ts    | used to preload all the IPC code
+        - script.ts     | the UI logic of the app
     - index.html    | the UI of the app
-    - main.js       | the entry point of the app
     - notarize.js   | used to notarize the app for release
     - package.json  | npm packages file, contains build config too
-    - preload.js    | used to preload all the IPC code
 ```
 
 ## Run it locally

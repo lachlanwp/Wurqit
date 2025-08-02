@@ -7,7 +7,7 @@ jest.mock("ffmpeg-static");
 jest.mock("os");
 
 // Import the module under test
-const generator = require("../generator");
+const generator = require("../src/generator");
 
 // Get the mocked modules
 const fs = require("fs");

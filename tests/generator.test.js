@@ -7,7 +7,7 @@ jest.mock("ffmpeg-static");
 jest.mock("os");
 
 // Import the module under test
-const generator = require("../generator");
+const generator = require("../src/generator");
 
 // Get the mocked modules
 const fs = require("fs");
@@ -78,8 +78,6 @@ describe("Generator Module", () => {
         );
       });
     });
-
-
   });
 
   describe("FFmpeg Functions", () => {
@@ -433,7 +431,9 @@ describe("Generator Module", () => {
             ["barbell"], // equipment
             null // outputPath - should cause error
           )
-        ).rejects.toThrow("Output path is required. Please select a folder to save the video.");
+        ).rejects.toThrow(
+          "Output path is required. Please select a folder to save the video."
+        );
       });
 
       test("should generate workout video successfully", async () => {

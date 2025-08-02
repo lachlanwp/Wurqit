@@ -1,16 +1,16 @@
-const fs = require("fs");
-const path = require("path");
-const { spawn } = require("child_process");
-const ffmpeg = require("ffmpeg-static");
-const os = require("os");
+import fs from "fs";
+import path from "path";
+import { spawn } from "child_process";
+import ffmpeg from "ffmpeg-static";
+import os from "os";
 
 // Add memory management and caching
-let categoriesCache = null;
-let equipmentCache = new Map();
-let videoFilesCache = new Map();
+let categoriesCache: string[] | null = null;
+let equipmentCache = new Map<string, string[]>();
+let videoFilesCache = new Map<string, { [key: string]: string[] }>();
 
 // Function to clear caches when memory usage is high
-function clearCachesIfNeeded() {
+function clearCachesIfNeeded(): void {
   const memUsage = process.memoryUsage();
   const heapUsedMB = memUsage.heapUsed / 1024 / 1024;
 
@@ -31,7 +31,7 @@ function clearCachesIfNeeded() {
 }
 
 // Function to get the correct FFmpeg path for both dev and production
-function getFfmpegPath() {
+function getFfmpegPath(): string {
   // In development, ffmpeg-static returns the path directly
   if (
     !process.mainModule ||
@@ -40,7 +40,7 @@ function getFfmpegPath() {
     console.log(
       `[DEBUG] Development mode - using ffmpeg-static path: ${ffmpeg}`
     );
-    return ffmpeg;
+    return ffmpeg || "";
   }
 
   // In production (packaged app), we need to look in the unpacked resources
@@ -99,13 +99,15 @@ function getFfmpegPath() {
   console.log(`[DEBUG] Checking possible paths:`);
   for (let i = 0; i < possiblePaths.length; i++) {
     const ffmpegPath = possiblePaths[i];
-    const exists = fs.existsSync(ffmpegPath);
-    console.log(
-      `[DEBUG] ${i + 1}. ${ffmpegPath} - ${exists ? "EXISTS" : "NOT FOUND"}`
-    );
-    if (exists) {
-      console.log(`[DEBUG] Found FFmpeg at: ${ffmpegPath}`);
-      return ffmpegPath;
+    if (ffmpegPath) {
+      const exists = fs.existsSync(ffmpegPath);
+      console.log(
+        `[DEBUG] ${i + 1}. ${ffmpegPath} - ${exists ? "EXISTS" : "NOT FOUND"}`
+      );
+      if (exists) {
+        console.log(`[DEBUG] Found FFmpeg at: ${ffmpegPath}`);
+        return ffmpegPath;
+      }
     }
   }
 
@@ -113,7 +115,7 @@ function getFfmpegPath() {
     `[DEBUG] FFmpeg not found in any expected location, using fallback: ${ffmpeg}`
   );
   // If we can't find it, return the original path and let it fail with a better error
-  return ffmpeg;
+  return ffmpeg || "";
 }
 
 // Colors for output (for console logging)
@@ -126,24 +128,30 @@ const colors = {
 };
 
 // Function to print colored output
-function printStatus(message, consoleCallback = null) {
-  const formattedMessage = `[INFO] ${message}`;
+function printStatus(
+  message: string,
+  consoleCallback: ((level: string, message: string) => void) | null = null
+): void {
   console.log(`${colors.GREEN}[INFO]${colors.NC} ${message}`);
   if (consoleCallback) {
     consoleCallback("info", message);
   }
 }
 
-function printWarning(message, consoleCallback = null) {
-  const formattedMessage = `[WARNING] ${message}`;
+function printWarning(
+  message: string,
+  consoleCallback: ((level: string, message: string) => void) | null = null
+): void {
   console.log(`${colors.YELLOW}[WARNING]${colors.NC} ${message}`);
   if (consoleCallback) {
     consoleCallback("warn", message);
   }
 }
 
-function printError(message, consoleCallback = null) {
-  const formattedMessage = `[ERROR] ${message}`;
+function printError(
+  message: string,
+  consoleCallback: ((level: string, message: string) => void) | null = null
+): void {
   console.log(`${colors.RED}[ERROR]${colors.NC} ${message}`);
   if (consoleCallback) {
     consoleCallback("error", message);
@@ -151,22 +159,22 @@ function printError(message, consoleCallback = null) {
 }
 
 // Function to validate numeric input
-function validateNumber(input, min, max) {
+function validateNumber(input: any, min: number, max: number): boolean {
   const num = parseInt(input);
   return !isNaN(num) && num >= min && num <= max;
 }
 
 // Function to convert filename to readable exercise name
-function formatExerciseName(filename) {
+function formatExerciseName(filename: string): string {
   const basename = path.basename(filename, path.extname(filename));
   // Replace hyphens with spaces and capitalize only the first character
   return basename.replace(/-/g, " ").replace(/^./, (str) => str.toUpperCase());
 }
 
-
-
 // Function to check if FFMPEG is available
-function checkFfmpeg(consoleCallback = null) {
+function checkFfmpeg(
+  consoleCallback: ((level: string, message: string) => void) | null = null
+): void {
   const ffmpegPath = getFfmpegPath();
 
   if (!ffmpegPath) {
@@ -187,8 +195,8 @@ function checkFfmpeg(consoleCallback = null) {
   );
 }
 
-function getBaseDir() {
-  let baseDir;
+function getBaseDir(): string {
+  let baseDir: string;
   try {
     if (
       process.mainModule &&
@@ -199,16 +207,16 @@ function getBaseDir() {
       baseDir = process.resourcesPath || __dirname;
     } else {
       // Dev mode
-      baseDir = __dirname;
+      baseDir = process.cwd();
     }
   } catch {
-    baseDir = __dirname;
+    baseDir = process.cwd();
   }
   return baseDir;
 }
 
-function getBaseMediaDir() {
-  let baseDir;
+function getBaseMediaDir(): string {
+  let baseDir: string;
   try {
     if (
       process.mainModule &&
@@ -226,8 +234,8 @@ function getBaseMediaDir() {
   return baseDir;
 }
 
-function getVideosDir() {
-  let baseDir;
+function getVideosDir(): string {
+  let baseDir: string;
   try {
     if (
       process.mainModule &&
@@ -246,7 +254,7 @@ function getVideosDir() {
 }
 
 // Function to get all category names (subfolders in videos/)
-function getCategories() {
+function getCategories(): string[] {
   // Check cache first
   if (categoriesCache) {
     return categoriesCache;
@@ -261,7 +269,7 @@ function getCategories() {
     throw new Error(`Videos directory not found: ${videosDir}`);
   }
 
-  const categories = [];
+  const categories: string[] = [];
   const items = fs.readdirSync(videosDir);
 
   for (const item of items) {
@@ -277,20 +285,20 @@ function getCategories() {
 }
 
 // Function to get all equipment names for given categories
-function getEquipment(categories) {
+function getEquipment(categories: string[]): string[] {
   // Create cache key from categories
   const cacheKey = categories.sort().join(",");
 
   // Check cache first
   if (equipmentCache.has(cacheKey)) {
-    return equipmentCache.get(cacheKey);
+    return equipmentCache.get(cacheKey)!;
   }
 
   // Clear caches if memory usage is high
   clearCachesIfNeeded();
 
   const videosDir = getVideosDir();
-  const equipmentSet = new Set();
+  const equipmentSet = new Set<string>();
 
   for (const category of categories) {
     const categoryDir = path.join(videosDir, category);
@@ -305,13 +313,16 @@ function getEquipment(categories) {
             }
           } catch (error) {
             // Skip items that can't be stat'd
-            console.warn(`Could not stat ${itemPath}: ${error.message}`);
+            const itemPath = path.join(categoryDir, item);
+            console.warn(
+              `Could not stat ${itemPath}: ${(error as Error).message}`
+            );
           }
         }
       } catch (error) {
         // Skip categories that can't be read
         console.warn(
-          `Could not read directory ${categoryDir}: ${error.message}`
+          `Could not read directory ${categoryDir}: ${(error as Error).message}`
         );
       }
     }
@@ -325,7 +336,10 @@ function getEquipment(categories) {
 }
 
 // Function to get exercise videos grouped by equipment type
-function getExerciseVideosByEquipment(categories, equipment) {
+function getExerciseVideosByEquipment(
+  categories: string[],
+  equipment: string[]
+): { [key: string]: string[] } {
   // Create cache key from categories and equipment
   const cacheKey = `${categories.sort().join(",")}|${equipment
     .sort()
@@ -333,14 +347,14 @@ function getExerciseVideosByEquipment(categories, equipment) {
 
   // Check cache first
   if (videoFilesCache.has(cacheKey)) {
-    return videoFilesCache.get(cacheKey);
+    return videoFilesCache.get(cacheKey)!;
   }
 
   // Clear caches if memory usage is high
   clearCachesIfNeeded();
 
   const videosDir = getVideosDir();
-  const equipmentVideos = {};
+  const equipmentVideos: { [key: string]: string[] } = {};
 
   for (const equip of equipment) {
     equipmentVideos[equip] = [];
@@ -358,7 +372,7 @@ function getExerciseVideosByEquipment(categories, equipment) {
         } catch (error) {
           // Skip equipment directories that can't be read
           console.warn(
-            `Could not read directory ${equipDir}: ${error.message}`
+            `Could not read directory ${equipDir}: ${(error as Error).message}`
           );
         }
       }
@@ -371,7 +385,7 @@ function getExerciseVideosByEquipment(categories, equipment) {
 }
 
 // Function to run FFmpeg command and return a promise
-function runFfmpeg(args) {
+function runFfmpeg(args: string[]): Promise<string> {
   return new Promise((resolve, reject) => {
     const ffmpegPath = getFfmpegPath();
     const ffmpegProcess = spawn(ffmpegPath, args);
@@ -379,15 +393,15 @@ function runFfmpeg(args) {
     let stdout = "";
     let stderr = "";
 
-    ffmpegProcess.stdout.on("data", (data) => {
+    ffmpegProcess.stdout.on("data", (data: Buffer) => {
       stdout += data.toString();
     });
 
-    ffmpegProcess.stderr.on("data", (data) => {
+    ffmpegProcess.stderr.on("data", (data: Buffer) => {
       stderr += data.toString();
     });
 
-    ffmpegProcess.on("close", (code) => {
+    ffmpegProcess.on("close", (code: number) => {
       if (code === 0) {
         resolve(stdout);
       } else {
@@ -395,7 +409,7 @@ function runFfmpeg(args) {
       }
     });
 
-    ffmpegProcess.on("error", (error) => {
+    ffmpegProcess.on("error", (error: Error) => {
       reject(error);
     });
   });
@@ -403,11 +417,11 @@ function runFfmpeg(args) {
 
 // Function to create progress grid visualization using colored rectangles
 function createProgressGridOverlay(
-  currentStation,
-  currentSet,
-  totalStations,
-  setsPerStation
-) {
+  currentStation: number,
+  currentSet: number,
+  totalStations: number,
+  setsPerStation: number
+): string {
   const videoWidth = 1920;
   const videoHeight = 1080;
   const gridTopMargin = 50;
@@ -419,29 +433,35 @@ function createProgressGridOverlay(
   const stationMargin = 20; // 20px margin between stations
 
   // Calculate total grid width
-  const totalGridWidth = totalStations * setsPerStation * cellWidth + 
-                        (totalStations - 1) * stationMargin + 
-                        (totalStations * (setsPerStation - 1)) * cellMargin;
-  
+  const totalGridWidth =
+    totalStations * setsPerStation * cellWidth +
+    (totalStations - 1) * stationMargin +
+    totalStations * (setsPerStation - 1) * cellMargin;
+
   // Calculate starting X position to center the grid
   const gridStartX = Math.floor((videoWidth - totalGridWidth) / 2);
 
-  const filterParts = [];
-  
+  const filterParts: string[] = [];
+
   // Add black transparent background behind the entire progress grid
   const gridHeight = cellHeight; // Single row height
   const gridPadding = 10; // Padding around the grid
   filterParts.push(
-    `drawbox=x=${gridStartX - gridPadding}:y=${gridTopMargin - gridPadding}:w=${totalGridWidth + 2 * gridPadding}:h=${gridHeight + 2 * gridPadding}:color=black@0.5:t=fill`
+    `drawbox=x=${gridStartX - gridPadding}:y=${gridTopMargin - gridPadding}:w=${
+      totalGridWidth + 2 * gridPadding
+    }:h=${gridHeight + 2 * gridPadding}:color=black@0.5:t=fill`
   );
-  
+
   let currentX = gridStartX;
 
   for (let station = 0; station < totalStations; station++) {
     for (let set = 1; set <= setsPerStation; set++) {
       // Determine cell color based on status
-      let cellColor;
-      if (station < currentStation || (station === currentStation && set < currentSet)) {
+      let cellColor: string;
+      if (
+        station < currentStation ||
+        (station === currentStation && set < currentSet)
+      ) {
         // Completed set - use a sporty lime green color to represent "full"
         cellColor = "lime";
       } else {
@@ -469,11 +489,11 @@ function createProgressGridOverlay(
 
 // Function to create countdown video segment
 async function createCountdownSegment(
-  duration,
-  text,
-  outputFile,
-  consoleCallback = null
-) {
+  duration: number,
+  text: string,
+  outputFile: string,
+  consoleCallback: ((level: string, message: string) => void) | null = null
+): Promise<boolean> {
   printStatus(
     `Creating countdown segment: ${text} (${duration}s)`,
     consoleCallback
@@ -484,7 +504,7 @@ async function createCountdownSegment(
 
   // Get Oswald font path
   const oswaldFontPath = path.join(getBaseMediaDir(), "images", "Oswald.ttf");
-  
+
   // Check if font file exists
   if (!fs.existsSync(oswaldFontPath)) {
     throw new Error(`Oswald font not found: ${oswaldFontPath}`);
@@ -506,7 +526,13 @@ async function createCountdownSegment(
     `color=c=${bgColor}:size=1920x1080:duration=${duration}`,
     ...(fs.existsSync(beepFile) ? ["-i", beepFile] : []),
     "-filter_complex",
-    `[0:v]drawtext=text='${text}':fontfile='${oswaldFontPath.replace(/\\/g, '/')}':fontcolor=white:fontsize=72:x=(w-text_w)/2:y=(h-text_h)/2,drawtext=text='%{eif\\:(${duration}-t)\\:d\\:2}':fontfile='${oswaldFontPath.replace(/\\/g, '/')}':fontcolor=white:fontsize=120:x=(w-text_w)/2:y=(h-text_h)/2+100[v]${
+    `[0:v]drawtext=text='${text}':fontfile='${oswaldFontPath.replace(
+      /\\/g,
+      "/"
+    )}':fontcolor=white:fontsize=72:x=(w-text_w)/2:y=(h-text_h)/2,drawtext=text='%{eif\\:(${duration}-t)\\:d\\:2}':fontfile='${oswaldFontPath.replace(
+      /\\/g,
+      "/"
+    )}':fontcolor=white:fontsize=120:x=(w-text_w)/2:y=(h-text_h)/2+100[v]${
       fs.existsSync(beepFile) ? ";[1:a]adelay=0|0[beep]" : ""
     }`,
     "-map",
@@ -538,22 +564,22 @@ async function createCountdownSegment(
       `Failed to create countdown segment: ${outputFile}`,
       consoleCallback
     );
-    printError(error.message, consoleCallback);
+    printError((error as Error).message, consoleCallback);
     return false;
   }
 }
 
 // Function to create exercise video segment
 async function createExerciseSegment(
-  videoFile,
-  duration,
-  currentStation,
-  currentSet,
-  totalStations,
-  setsPerStation,
-  outputFile,
-  consoleCallback = null
-) {
+  videoFile: string,
+  duration: number,
+  currentStation: number,
+  currentSet: number,
+  totalStations: number,
+  setsPerStation: number,
+  outputFile: string,
+  consoleCallback: ((level: string, message: string) => void) | null = null
+): Promise<boolean> {
   printStatus(
     `Creating exercise segment: ${path.basename(videoFile)} (Station ${
       currentStation + 1
@@ -573,8 +599,6 @@ async function createExerciseSegment(
   // Check if BEEP.mp3 exists
   const beepFile = path.join(getBaseMediaDir(), "audio", "BEEP.mp3");
 
-
-
   // Create progress grid overlay filter
   const gridOverlay = createProgressGridOverlay(
     currentStation,
@@ -585,7 +609,7 @@ async function createExerciseSegment(
 
   // Get Oswald font path
   const oswaldFontPath = path.join(getBaseMediaDir(), "images", "Oswald.ttf");
-  
+
   // Check if font file exists
   if (!fs.existsSync(oswaldFontPath)) {
     throw new Error(`Oswald font not found: ${oswaldFontPath}`);
@@ -605,7 +629,13 @@ async function createExerciseSegment(
     `color=c=darkgreen:size=1920x1080:duration=${duration}`,
     ...(fs.existsSync(beepFile) ? ["-i", beepFile] : []),
     "-filter_complex",
-    `[0:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black[scaled];[1:v][scaled]overlay=(W-w)/2:(H-h)/2,drawtext=text='${exerciseName}':fontfile='${oswaldFontPath.replace(/\\/g, '/')}':fontcolor=white:fontsize=60:x=(w-text_w)/2:y=h-200:box=1:boxcolor=black@0.7:boxborderw=5,drawtext=text='%{eif\\:(${duration}-t)\\:d\\:2}':fontfile='${oswaldFontPath.replace(/\\/g, '/')}':fontcolor=white:fontsize=72:x=(w-text_w)/2:y=h-100:box=1:boxcolor=black@0.7:boxborderw=5,${gridOverlay}[v]${
+    `[0:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2[scaled];[1:v][scaled]overlay=(W-w)/2:(H-h)/2,drawtext=text='${exerciseName}':fontfile='${oswaldFontPath.replace(
+      /\\/g,
+      "/"
+    )}':fontcolor=white:fontsize=60:x=(w-text_w)/2:y=h-200:box=1:boxcolor=black@0.7:boxborderw=5,drawtext=text='%{eif\\:(${duration}-t)\\:d\\:2}':fontfile='${oswaldFontPath.replace(
+      /\\/g,
+      "/"
+    )}':fontcolor=white:fontsize=72:x=(w-text_w)/2:y=h-100:box=1:boxcolor=black@0.7:boxborderw=5,${gridOverlay}[v]${
       fs.existsSync(beepFile) ? ";[2:a]adelay=0|0[beep]" : ""
     }`,
     "-map",
@@ -637,18 +667,18 @@ async function createExerciseSegment(
       `Failed to create exercise segment: ${outputFile}`,
       consoleCallback
     );
-    printError(error.message, consoleCallback);
+    printError((error as Error).message, consoleCallback);
     return false;
   }
 }
 
 // Function to create station change segment with next exercise preview
 async function createStationChangeSegment(
-  duration,
-  nextExerciseFile,
-  outputFile,
-  consoleCallback = null
-) {
+  duration: number,
+  nextExerciseFile: string,
+  outputFile: string,
+  consoleCallback: ((level: string, message: string) => void) | null = null
+): Promise<boolean> {
   printStatus(
     `Creating station change segment with preview: ${path.basename(
       nextExerciseFile
@@ -673,7 +703,7 @@ async function createStationChangeSegment(
 
   // Get Oswald font path
   const oswaldFontPath = path.join(getBaseMediaDir(), "images", "Oswald.ttf");
-  
+
   // Check if font file exists
   if (!fs.existsSync(oswaldFontPath)) {
     throw new Error(`Oswald font not found: ${oswaldFontPath}`);
@@ -693,7 +723,16 @@ async function createStationChangeSegment(
     `color=c=black:size=1920x1080:duration=${duration}`,
     ...(fs.existsSync(beepFile) ? ["-i", beepFile] : []),
     "-filter_complex",
-    `[0:v]scale=600:600:force_original_aspect_ratio=decrease,pad=600:600:(ow-iw)/2:(oh-ih)/2[scaled];[1:v][scaled]overlay=(W-w)/2:(H-h)/2,drawtext=text='NEXT EXERCISE':fontfile='${oswaldFontPath.replace(/\\/g, '/')}':fontcolor=white:fontsize=72:x=(w-text_w)/2:y=50,drawtext=text='${nextExerciseName}':fontfile='${oswaldFontPath.replace(/\\/g, '/')}':fontcolor=white:fontsize=48:x=(w-text_w)/2:y=150,drawtext=text='%{eif\\:(${duration}-t)\\:d\\:2}':fontfile='${oswaldFontPath.replace(/\\/g, '/')}':fontcolor=white:fontsize=120:x=(w-text_w)/2:y=h-100[v]${
+    `[0:v]scale=600:600:force_original_aspect_ratio=decrease,pad=600:600:(ow-iw)/2:(oh-ih)/2[scaled];[1:v][scaled]overlay=(W-w)/2:(H-h)/2,drawtext=text='NEXT EXERCISE':fontfile='${oswaldFontPath.replace(
+      /\\/g,
+      "/"
+    )}':fontcolor=white:fontsize=72:x=(w-text_w)/2:y=50,drawtext=text='${nextExerciseName}':fontfile='${oswaldFontPath.replace(
+      /\\/g,
+      "/"
+    )}':fontcolor=white:fontsize=48:x=(w-text_w)/2:y=150,drawtext=text='%{eif\\:(${duration}-t)\\:d\\:2}':fontfile='${oswaldFontPath.replace(
+      /\\/g,
+      "/"
+    )}':fontcolor=white:fontsize=120:x=(w-text_w)/2:y=h-100[v]${
       fs.existsSync(beepFile) ? ";[2:a]adelay=0|0[beep]" : ""
     }`,
     "-map",
@@ -728,17 +767,22 @@ async function createStationChangeSegment(
       `Failed to create station change segment: ${outputFile}`,
       consoleCallback
     );
-    printError(error.message, consoleCallback);
+    printError((error as Error).message, consoleCallback);
     return false;
   }
 }
 
 // Function to get celebration video files
-function getCelebrationVideos(consoleCallback = null) {
+function getCelebrationVideos(
+  consoleCallback: ((level: string, message: string) => void) | null = null
+): string[] {
   const celebrateDir = path.join(getBaseMediaDir(), "celebrate");
-  printStatus(`Looking for celebration directory: ${celebrateDir}`, consoleCallback);
-  
-  let celebrateFiles = [];
+  printStatus(
+    `Looking for celebration directory: ${celebrateDir}`,
+    consoleCallback
+  );
+
+  let celebrateFiles: string[] = [];
 
   // Try to get celebration video files
   if (fs.existsSync(celebrateDir)) {
@@ -749,15 +793,21 @@ function getCelebrationVideos(consoleCallback = null) {
           celebrateFiles.push(path.join(celebrateDir, item));
         }
       }
-      
+
       if (celebrateFiles.length > 0) {
-        printStatus(`Found ${celebrateFiles.length} celebration videos:`, consoleCallback);
-        celebrateFiles.forEach(file => {
+        printStatus(
+          `Found ${celebrateFiles.length} celebration videos:`,
+          consoleCallback
+        );
+        celebrateFiles.forEach((file) => {
           printStatus(`  - ${path.basename(file)}`, consoleCallback);
         });
       }
     } catch (error) {
-      printWarning(`Could not read celebration directory: ${error.message}`, consoleCallback);
+      printWarning(
+        `Could not read celebration directory: ${(error as Error).message}`,
+        consoleCallback
+      );
     }
   }
 
@@ -765,18 +815,18 @@ function getCelebrationVideos(consoleCallback = null) {
 }
 
 // Function to create file list for concatenation
-function createFileList(fileList, segments) {
+function createFileList(fileList: string, segments: string[]): void {
   const content = segments.map((segment) => `file '${segment}'`).join("\n");
   fs.writeFileSync(fileList, content);
 }
 
 // Function to select exercises with even distribution across equipment types
 function selectExercisesEvenly(
-  maxExercises,
-  selectedCategories,
-  selectedEquipment,
-  consoleCallback = null
-) {
+  maxExercises: number,
+  selectedCategories: string[],
+  selectedEquipment: string[],
+  consoleCallback: ((level: string, message: string) => void) | null = null
+): string[] {
   const equipmentVideos = getExerciseVideosByEquipment(
     selectedCategories,
     selectedEquipment
@@ -806,7 +856,7 @@ function selectExercisesEvenly(
     }
   }
 
-  const selectedExercises = [];
+  const selectedExercises: string[] = [];
 
   // Select exercises from each equipment type
   for (let i = 0; i < selectedEquipment.length; i++) {
@@ -865,19 +915,19 @@ function selectExercisesEvenly(
 
 // Main function to generate workout video
 async function generateWorkoutVideo(
-  workDuration,
-  restDuration,
-  setsPerStation,
-  stationRest,
-  totalWorkoutDuration,
-  categories,
-  equipment,
-  outputPath = null,
-  progressCallback = null,
-  consoleCallback = null
-) {
+  workDuration: number,
+  restDuration: number,
+  setsPerStation: number,
+  stationRest: number,
+  totalWorkoutDuration: number,
+  categories: string[],
+  equipment: string[],
+  outputPath: string | null = null,
+  progressCallback: ((progress: number, message: string) => void) | null = null,
+  consoleCallback: ((level: string, message: string) => void) | null = null
+): Promise<string> {
   // Helper function to log to both console and browser
-  const logToBoth = (message) => {
+  const logToBoth = (message: string) => {
     console.log(message);
     if (consoleCallback) {
       consoleCallback("info", message.replace(/\x1b\[[0-9;]*m/g, "")); // Remove ANSI color codes
@@ -1013,7 +1063,7 @@ async function generateWorkoutVideo(
 
     // Generate video segments
     printStatus("Generating video segments...", consoleCallback);
-    const segments = [];
+    const segments: string[] = [];
     let segmentCount = 0;
 
     for (let i = 0; i < exerciseVideos.length; i++) {
@@ -1101,27 +1151,48 @@ async function generateWorkoutVideo(
     // Add celebration videos at the end
     printStatus("Adding celebration videos...", consoleCallback);
     const celebrationVideos = getCelebrationVideos(consoleCallback);
-    
+
     if (celebrationVideos.length > 0) {
-      printStatus(`Processing ${celebrationVideos.length} celebration videos...`, consoleCallback);
-      
+      printStatus(
+        `Processing ${celebrationVideos.length} celebration videos...`,
+        consoleCallback
+      );
+
       // Transcode celebration videos to match workout segment format
       for (let i = 0; i < celebrationVideos.length; i++) {
         const originalVideo = celebrationVideos[i];
         if (fs.existsSync(originalVideo)) {
-          const transcodedVideo = path.join(tempDir, `celebration_${segmentCount}.mp4`);
-          
-          printStatus(`Transcoding celebration video ${i + 1}/${celebrationVideos.length}: ${path.basename(originalVideo)}`, consoleCallback);
-          
+          const transcodedVideo = path.join(
+            tempDir,
+            `celebration_${segmentCount}.mp4`
+          );
+
+          printStatus(
+            `Transcoding celebration video ${i + 1}/${
+              celebrationVideos.length
+            }: ${path.basename(originalVideo)}`,
+            consoleCallback
+          );
+
           try {
             // Get Oswald font path for text overlay
-            const oswaldFontPath = path.join(getBaseMediaDir(), "images", "Oswald.ttf");
-            
+            const oswaldFontPath = path.join(
+              getBaseMediaDir(),
+              "images",
+              "Oswald.ttf"
+            );
+
             // Check if font file exists
             if (!fs.existsSync(oswaldFontPath)) {
-              printWarning(`Oswald font not found: ${oswaldFontPath}`, consoleCallback);
-              printWarning("Will transcode without text overlay", consoleCallback);
-              
+              printWarning(
+                `Oswald font not found: ${oswaldFontPath}`,
+                consoleCallback
+              );
+              printWarning(
+                "Will transcode without text overlay",
+                consoleCallback
+              );
+
               // Simple transcoding without text overlay
               const simpleTranscodeArgs = [
                 "-i",
@@ -1139,16 +1210,22 @@ async function generateWorkoutVideo(
                 "-y",
                 transcodedVideo,
               ];
-              
+
               await runFfmpeg(simpleTranscodeArgs);
             } else {
               printStatus(`Using font: ${oswaldFontPath}`, consoleCallback);
-              
+
               const transcodeArgs = [
                 "-i",
                 originalVideo,
                 "-filter_complex",
-                `[0:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black,drawtext=text='CONGRATULATIONS!':fontfile='${oswaldFontPath.replace(/\\/g, '/')}':fontcolor=white:fontsize=72:x=(w-text_w)/2:y=50:box=1:boxcolor=black@0.7:boxborderw=5,drawtext=text='YOU COMPLETED THE WORKOUT!':fontfile='${oswaldFontPath.replace(/\\/g, '/')}':fontcolor=white:fontsize=60:x=(w-text_w)/2:y=150:box=1:boxcolor=black@0.7:boxborderw=5[v]`,
+                `[0:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black,drawtext=text='CONGRATULATIONS!':fontfile='${oswaldFontPath.replace(
+                  /\\/g,
+                  "/"
+                )}':fontcolor=white:fontsize=72:x=(w-text_w)/2:y=50:box=1:boxcolor=black@0.7:boxborderw=5,drawtext=text='YOU COMPLETED THE WORKOUT!':fontfile='${oswaldFontPath.replace(
+                  /\\/g,
+                  "/"
+                )}':fontcolor=white:fontsize=60:x=(w-text_w)/2:y=150:box=1:boxcolor=black@0.7:boxborderw=5[v]`,
                 "-map",
                 "[v]",
                 "-c:v",
@@ -1163,29 +1240,55 @@ async function generateWorkoutVideo(
                 "-y",
                 transcodedVideo,
               ];
-              
+
               await runFfmpeg(transcodeArgs);
             }
-            
+
             if (fs.existsSync(transcodedVideo)) {
               const stats = fs.statSync(transcodedVideo);
-              printStatus(`Transcoded file size: ${(stats.size / 1024 / 1024).toFixed(2)} MB`, consoleCallback);
-              
+              printStatus(
+                `Transcoded file size: ${(stats.size / 1024 / 1024).toFixed(
+                  2
+                )} MB`,
+                consoleCallback
+              );
+
               segments.push(transcodedVideo);
               segmentCount++;
-              printStatus(`Added transcoded celebration video: ${path.basename(transcodedVideo)}`, consoleCallback);
+              printStatus(
+                `Added transcoded celebration video: ${path.basename(
+                  transcodedVideo
+                )}`,
+                consoleCallback
+              );
             } else {
-              printWarning(`Failed to create transcoded celebration video: ${path.basename(originalVideo)}`, consoleCallback);
+              printWarning(
+                `Failed to create transcoded celebration video: ${path.basename(
+                  originalVideo
+                )}`,
+                consoleCallback
+              );
             }
           } catch (error) {
-            printWarning(`Failed to transcode celebration video ${path.basename(originalVideo)}: ${error.message}`, consoleCallback);
+            printWarning(
+              `Failed to transcode celebration video ${path.basename(
+                originalVideo
+              )}: ${(error as Error).message}`,
+              consoleCallback
+            );
           }
         } else {
-          printWarning(`Celebration video not found: ${originalVideo}`, consoleCallback);
+          printWarning(
+            `Celebration video not found: ${originalVideo}`,
+            consoleCallback
+          );
         }
       }
     } else {
-      printStatus("No celebration videos found, skipping celebration", consoleCallback);
+      printStatus(
+        "No celebration videos found, skipping celebration",
+        consoleCallback
+      );
     }
 
     // Update progress
@@ -1204,7 +1307,9 @@ async function generateWorkoutVideo(
 
     // Get output path and create output filename
     if (!outputPath) {
-      throw new Error("Output path is required. Please select a folder to save the video.");
+      throw new Error(
+        "Output path is required. Please select a folder to save the video."
+      );
     }
     const outputDir = outputPath;
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
@@ -1216,15 +1321,21 @@ async function generateWorkoutVideo(
     // Show file list for debugging
     printStatus("File list contents:", consoleCallback);
     logToBoth(fs.readFileSync(fileList, "utf8"));
-    
+
     // Debug: Show segments array and verify each segment
-    printStatus(`Total segments to concatenate: ${segments.length}`, consoleCallback);
+    printStatus(
+      `Total segments to concatenate: ${segments.length}`,
+      consoleCallback
+    );
     for (let i = 0; i < segments.length; i++) {
       const segment = segments[i];
       const exists = fs.existsSync(segment);
       const segmentName = path.basename(segment);
-      printStatus(`Segment ${i + 1}: ${segmentName} - ${exists ? 'EXISTS' : 'MISSING'}`, consoleCallback);
-      
+      printStatus(
+        `Segment ${i + 1}: ${segmentName} - ${exists ? "EXISTS" : "MISSING"}`,
+        consoleCallback
+      );
+
       if (exists) {
         try {
           // Get segment duration for debugging
@@ -1239,9 +1350,17 @@ async function generateWorkoutVideo(
           ];
           const segmentDuration = await runFfmpeg(durationArgs);
           const durationFloat = parseFloat(segmentDuration.trim());
-          printStatus(`  Duration: ${durationFloat.toFixed(2)}s`, consoleCallback);
+          printStatus(
+            `  Duration: ${durationFloat.toFixed(2)}s`,
+            consoleCallback
+          );
         } catch (durationError) {
-          printWarning(`  Could not get duration for ${segmentName}: ${durationError.message}`, consoleCallback);
+          printWarning(
+            `  Could not get duration for ${segmentName}: ${
+              (durationError as Error).message
+            }`,
+            consoleCallback
+          );
         }
       }
     }
@@ -1320,12 +1439,12 @@ async function generateWorkoutVideo(
 
     return outputFile;
   } catch (error) {
-    printError(error.message, consoleCallback);
+    printError((error as Error).message, consoleCallback);
     throw error;
   }
 }
 
-module.exports = {
+export {
   printStatus,
   printWarning,
   printError,

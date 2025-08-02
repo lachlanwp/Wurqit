@@ -97,8 +97,11 @@
       content="media/icon/windows/favicon-144.png"
     />
     <meta name="theme-color" content="#ffffff" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self';">
-    <link rel="stylesheet" href="styles.css">
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self';"
+    />
+    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <div class="container">
@@ -177,8 +180,18 @@
           <div class="form-group">
             <label for="outputFolder">Save video to:</label>
             <div class="folder-input-container">
-              <input type="text" id="outputFolder" class="folder-input" readonly placeholder="Click 'Choose Folder' to select where to save the video">
-              <button type="button" id="selectFolderBtn" class="submit-btn folder-button">
+              <input
+                type="text"
+                id="outputFolder"
+                class="folder-input"
+                readonly
+                placeholder="Click 'Choose Folder' to select where to save the video"
+              />
+              <button
+                type="button"
+                id="selectFolderBtn"
+                class="submit-btn folder-button"
+              >
                 📂 Choose Folder
               </button>
             </div>
@@ -209,6 +222,6 @@
       <div id="output"></div>
     </div>
 
-    <script src="script.js"></script>
+    <script src="src/script.js"></script>
   </body>
 </html>

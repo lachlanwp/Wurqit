@@ -4,39 +4,47 @@ document.addEventListener("contextmenu", function (e) {
 });
 
 // Populate dropdown options
-function populateDropdowns() {
+function populateDropdowns(): void {
   // Work duration: 20-120 seconds in 5-second increments
-  const workDurationSelect = document.getElementById("workDuration");
+  const workDurationSelect = document.getElementById(
+    "workDuration"
+  ) as HTMLSelectElement;
   for (let i = 20; i <= 120; i += 5) {
     const option = document.createElement("option");
-    option.value = i;
+    option.value = i.toString();
     option.textContent = `${i} seconds`;
     workDurationSelect.appendChild(option);
   }
 
   // Rest duration: 5-60 seconds in 5-second increments
-  const restDurationSelect = document.getElementById("restDuration");
+  const restDurationSelect = document.getElementById(
+    "restDuration"
+  ) as HTMLSelectElement;
   for (let i = 5; i <= 60; i += 5) {
     const option = document.createElement("option");
-    option.value = i;
+    option.value = i.toString();
     option.textContent = `${i} seconds`;
     restDurationSelect.appendChild(option);
   }
 
   // Sets per station: 2-6 in 1 set increments
-  const setsPerStationSelect = document.getElementById("setsPerStation");
+  const setsPerStationSelect = document.getElementById(
+    "setsPerStation"
+  ) as HTMLSelectElement;
   for (let i = 2; i <= 6; i++) {
     const option = document.createElement("option");
-    option.value = i;
+    option.value = i.toString();
     option.textContent = `${i} sets`;
     setsPerStationSelect.appendChild(option);
   }
 
   // Station rest: 5-40 seconds in 5-second increments
-  const stationRestSelect = document.getElementById("stationRest");
+  const stationRestSelect = document.getElementById(
+    "stationRest"
+  ) as HTMLSelectElement;
   for (let i = 5; i <= 40; i += 5) {
     const option = document.createElement("option");
-    option.value = i;
+    option.value = i.toString();
     option.textContent = `${i} seconds`;
     stationRestSelect.appendChild(option);
   }
@@ -44,20 +52,22 @@ function populateDropdowns() {
   // Total workout duration: 10-120 minutes in 10-minute increments
   const totalWorkoutDurationSelect = document.getElementById(
     "totalWorkoutDuration"
-  );
+  ) as HTMLSelectElement;
   for (let i = 10; i <= 120; i += 10) {
     const option = document.createElement("option");
-    option.value = i;
+    option.value = i.toString();
     option.textContent = `${i} minutes`;
     totalWorkoutDurationSelect.appendChild(option);
   }
 }
 
 // Load categories from the generator module
-async function loadCategories() {
+async function loadCategories(): Promise<void> {
   try {
     const categories = await window.api.getCategories();
     const container = document.getElementById("categoriesContainer");
+    if (!container) return;
+
     container.innerHTML = "";
 
     const checkboxGroup = document.createElement("div");
@@ -84,24 +94,32 @@ async function loadCategories() {
 
     container.appendChild(checkboxGroup);
   } catch (error) {
-    document.getElementById(
-      "categoriesContainer"
-    ).innerHTML = `<div class="error">Error loading categories: ${error.message}</div>`;
+    const container = document.getElementById("categoriesContainer");
+    if (container) {
+      container.innerHTML = `<div class="error">Error loading categories: ${
+        (error as Error).message
+      }</div>`;
+    }
   }
 }
 
 // Load equipment based on selected categories
-async function loadEquipment() {
+async function loadEquipment(): Promise<void> {
   try {
     const selectedCategories = getSelectedCategories();
     if (selectedCategories.length === 0) {
-      document.getElementById("equipmentContainer").innerHTML =
-        '<div class="loading">Select categories first to load equipment</div>';
+      const container = document.getElementById("equipmentContainer");
+      if (container) {
+        container.innerHTML =
+          '<div class="loading">Select categories first to load equipment</div>';
+      }
       return;
     }
 
     const equipment = await window.api.getEquipment(selectedCategories);
     const container = document.getElementById("equipmentContainer");
+    if (!container) return;
+
     container.innerHTML = "";
 
     const checkboxGroup = document.createElement("div");
@@ -128,51 +146,76 @@ async function loadEquipment() {
 
     container.appendChild(checkboxGroup);
   } catch (error) {
-    document.getElementById(
-      "equipmentContainer"
-    ).innerHTML = `<div class="error">Error loading equipment: ${error.message}</div>`;
+    const container = document.getElementById("equipmentContainer");
+    if (container) {
+      container.innerHTML = `<div class="error">Error loading equipment: ${
+        (error as Error).message
+      }</div>`;
+    }
   }
 }
 
 // Get selected categories
-function getSelectedCategories() {
+function getSelectedCategories(): string[] {
   const checkboxes = document.querySelectorAll(
     'input[name="categories"]:checked'
-  );
+  ) as NodeListOf<HTMLInputElement>;
   return Array.from(checkboxes).map((cb) => cb.value);
 }
 
 // Get selected equipment
-function getSelectedEquipment() {
+function getSelectedEquipment(): string[] {
   const checkboxes = document.querySelectorAll(
     'input[name="equipment"]:checked'
-  );
+  ) as NodeListOf<HTMLInputElement>;
   return Array.from(checkboxes).map((cb) => cb.value);
 }
 
 // Save current form settings (silent - no user notification)
-async function saveCurrentSettings() {
+async function saveCurrentSettings(): Promise<void> {
   try {
     const settings = {
-      workDuration: parseInt(document.getElementById("workDuration").value) || null,
-      restDuration: parseInt(document.getElementById("restDuration").value) || null,
-      setsPerStation: parseInt(document.getElementById("setsPerStation").value) || null,
-      stationRest: parseInt(document.getElementById("stationRest").value) || null,
-      totalWorkoutDuration: parseInt(document.getElementById("totalWorkoutDuration").value) || null,
+      workDuration:
+        parseInt(
+          (document.getElementById("workDuration") as HTMLSelectElement)
+            ?.value || "0"
+        ) || null,
+      restDuration:
+        parseInt(
+          (document.getElementById("restDuration") as HTMLSelectElement)
+            ?.value || "0"
+        ) || null,
+      setsPerStation:
+        parseInt(
+          (document.getElementById("setsPerStation") as HTMLSelectElement)
+            ?.value || "0"
+        ) || null,
+      stationRest:
+        parseInt(
+          (document.getElementById("stationRest") as HTMLSelectElement)
+            ?.value || "0"
+        ) || null,
+      totalWorkoutDuration:
+        parseInt(
+          (document.getElementById("totalWorkoutDuration") as HTMLSelectElement)
+            ?.value || "0"
+        ) || null,
       categories: getSelectedCategories(),
       equipment: getSelectedEquipment(),
-      outputPath: document.getElementById("outputFolder").value || null,
-      timestamp: new Date().toISOString()
+      outputPath:
+        (document.getElementById("outputFolder") as HTMLInputElement)?.value ||
+        null,
+      timestamp: new Date().toISOString(),
     };
 
     await window.api.saveSettings(settings);
   } catch (error) {
-    console.log("Failed to save settings:", error.message);
+    console.log("Failed to save settings:", (error as Error).message);
   }
 }
 
 // Load saved settings into form (silent - no user notification)
-async function loadSavedSettings() {
+async function loadSavedSettings(): Promise<void> {
   try {
     const settings = await window.api.loadSettings();
     if (!settings) {
@@ -181,30 +224,56 @@ async function loadSavedSettings() {
 
     // Load form values
     if (settings.workDuration) {
-      document.getElementById("workDuration").value = settings.workDuration;
+      const workDurationSelect = document.getElementById(
+        "workDuration"
+      ) as HTMLSelectElement;
+      if (workDurationSelect)
+        workDurationSelect.value = settings.workDuration.toString();
     }
     if (settings.restDuration) {
-      document.getElementById("restDuration").value = settings.restDuration;
+      const restDurationSelect = document.getElementById(
+        "restDuration"
+      ) as HTMLSelectElement;
+      if (restDurationSelect)
+        restDurationSelect.value = settings.restDuration.toString();
     }
     if (settings.setsPerStation) {
-      document.getElementById("setsPerStation").value = settings.setsPerStation;
+      const setsPerStationSelect = document.getElementById(
+        "setsPerStation"
+      ) as HTMLSelectElement;
+      if (setsPerStationSelect)
+        setsPerStationSelect.value = settings.setsPerStation.toString();
     }
     if (settings.stationRest) {
-      document.getElementById("stationRest").value = settings.stationRest;
+      const stationRestSelect = document.getElementById(
+        "stationRest"
+      ) as HTMLSelectElement;
+      if (stationRestSelect)
+        stationRestSelect.value = settings.stationRest.toString();
     }
     if (settings.totalWorkoutDuration) {
-      document.getElementById("totalWorkoutDuration").value = settings.totalWorkoutDuration;
+      const totalWorkoutDurationSelect = document.getElementById(
+        "totalWorkoutDuration"
+      ) as HTMLSelectElement;
+      if (totalWorkoutDurationSelect)
+        totalWorkoutDurationSelect.value =
+          settings.totalWorkoutDuration.toString();
     }
     if (settings.outputPath) {
-      document.getElementById("outputFolder").value = settings.outputPath;
+      const outputFolderInput = document.getElementById(
+        "outputFolder"
+      ) as HTMLInputElement;
+      if (outputFolderInput) outputFolderInput.value = settings.outputPath;
     }
 
     // Load categories (need to wait for categories to be loaded)
     if (settings.categories && settings.categories.length > 0) {
       // Wait a bit for categories to be loaded, then check them
       setTimeout(() => {
-        settings.categories.forEach(category => {
-          const checkbox = document.getElementById(`category-${category}`);
+        settings.categories.forEach((category) => {
+          const checkbox = document.getElementById(
+            `category-${category}`
+          ) as HTMLInputElement;
           if (checkbox) {
             checkbox.checked = true;
           }
@@ -217,8 +286,10 @@ async function loadSavedSettings() {
     // Load equipment (need to wait for equipment to be loaded)
     if (settings.equipment && settings.equipment.length > 0) {
       setTimeout(() => {
-        settings.equipment.forEach(equipment => {
-          const checkbox = document.getElementById(`equipment-${equipment}`);
+        settings.equipment.forEach((equipment) => {
+          const checkbox = document.getElementById(
+            `equipment-${equipment}`
+          ) as HTMLInputElement;
           if (checkbox) {
             checkbox.checked = true;
           }
@@ -228,12 +299,15 @@ async function loadSavedSettings() {
 
     console.log("Settings loaded automatically");
   } catch (error) {
-    console.log("No saved settings found or error loading settings:", error.message);
+    console.log(
+      "No saved settings found or error loading settings:",
+      (error as Error).message
+    );
   }
 }
 
 // Show message to user
-function showMessage(message, type = "info") {
+function showMessage(message: string, type: string = "info"): void {
   // Create message element
   const messageDiv = document.createElement("div");
   messageDiv.className = `message ${type}`;
@@ -279,53 +353,64 @@ function showMessage(message, type = "info") {
 }
 
 // Handle folder selection
-async function selectOutputFolder() {
+async function selectOutputFolder(): Promise<void> {
   try {
     const selectedPath = await window.api.selectOutputFolder();
     if (selectedPath) {
-      document.getElementById("outputFolder").value = selectedPath;
-      document.getElementById("outputFolderError").textContent = "";
+      const outputFolderInput = document.getElementById(
+        "outputFolder"
+      ) as HTMLInputElement;
+      if (outputFolderInput) outputFolderInput.value = selectedPath;
+      const outputFolderError = document.getElementById("outputFolderError");
+      if (outputFolderError) outputFolderError.textContent = "";
     }
   } catch (error) {
-    document.getElementById("outputFolderError").textContent = `Error selecting folder: ${error.message}`;
+    const outputFolderError = document.getElementById("outputFolderError");
+    if (outputFolderError) {
+      outputFolderError.textContent = `Error selecting folder: ${
+        (error as Error).message
+      }`;
+    }
   }
 }
 
 // Set form readonly state
-function setFormReadonly(readonly) {
+function setFormReadonly(readonly: boolean): void {
   // Get all form elements that should be disabled
   const formElements = [
-    ...document.querySelectorAll('select'),
+    ...document.querySelectorAll("select"),
     ...document.querySelectorAll('input[type="checkbox"]'),
-    document.getElementById('outputFolder'),
-    document.getElementById('selectFolderBtn')
-  ];
+    document.getElementById("outputFolder"),
+    document.getElementById("selectFolderBtn"),
+  ] as HTMLElement[];
 
-  formElements.forEach(element => {
-    element.disabled = readonly;
+  formElements.forEach((element) => {
+    if (element) {
+      (
+        element as HTMLInputElement | HTMLSelectElement | HTMLButtonElement
+      ).disabled = readonly;
+    }
   });
 
   // Add visual feedback for readonly state
-  const formSections = document.querySelectorAll('.form-section');
-  formSections.forEach(section => {
+  const formSections = document.querySelectorAll(".form-section");
+  formSections.forEach((section) => {
     if (readonly) {
-      section.style.opacity = '0.6';
-      section.style.pointerEvents = 'none';
+      (section as HTMLElement).style.opacity = "0.6";
+      (section as HTMLElement).style.pointerEvents = "none";
     } else {
-      section.style.opacity = '1';
-      section.style.pointerEvents = 'auto';
+      (section as HTMLElement).style.opacity = "1";
+      (section as HTMLElement).style.pointerEvents = "auto";
     }
   });
 }
 
 // Form validation
-function validateForm() {
+function validateForm(): boolean {
   let isValid = true;
 
   // Clear previous errors
-  document
-    .querySelectorAll(".error")
-    .forEach((el) => (el.textContent = ""));
+  document.querySelectorAll(".error").forEach((el) => (el.textContent = ""));
 
   // Validate required fields
   const requiredFields = [
@@ -337,11 +422,11 @@ function validateForm() {
   ];
 
   requiredFields.forEach((fieldId) => {
-    const field = document.getElementById(fieldId);
+    const field = document.getElementById(fieldId) as HTMLSelectElement;
     const errorElement = document.getElementById(fieldId + "Error");
 
-    if (!field.value) {
-      errorElement.textContent = "This field is required";
+    if (!field?.value) {
+      if (errorElement) errorElement.textContent = "This field is required";
       isValid = false;
     }
   });
@@ -349,24 +434,30 @@ function validateForm() {
   // Validate categories
   const selectedCategories = getSelectedCategories();
   if (selectedCategories.length === 0) {
-    document.getElementById("categoriesError").textContent =
-      "Please select at least one category";
+    const categoriesError = document.getElementById("categoriesError");
+    if (categoriesError)
+      categoriesError.textContent = "Please select at least one category";
     isValid = false;
   }
 
   // Validate equipment
   const selectedEquipment = getSelectedEquipment();
   if (selectedEquipment.length === 0) {
-    document.getElementById("equipmentError").textContent =
-      "Please select at least one equipment type";
+    const equipmentError = document.getElementById("equipmentError");
+    if (equipmentError)
+      equipmentError.textContent = "Please select at least one equipment type";
     isValid = false;
   }
 
   // Validate output folder
-  const outputFolder = document.getElementById("outputFolder").value;
+  const outputFolder = (
+    document.getElementById("outputFolder") as HTMLInputElement
+  )?.value;
   if (!outputFolder) {
-    document.getElementById("outputFolderError").textContent =
-      "Please select a folder to save the video";
+    const outputFolderError = document.getElementById("outputFolderError");
+    if (outputFolderError)
+      outputFolderError.textContent =
+        "Please select a folder to save the video";
     isValid = false;
   }
 
@@ -374,19 +465,30 @@ function validateForm() {
 }
 
 // Handle form submission
-async function handleSubmit(event) {
+async function handleSubmit(event: Event): Promise<void> {
   event.preventDefault();
 
   if (!validateForm()) {
     return;
   }
 
-  const submitBtn = document.getElementById("submitBtn");
+  const submitBtn = document.getElementById("submitBtn") as HTMLButtonElement;
   const output = document.getElementById("output");
   const progressContainer = document.getElementById("progressContainer");
   const progressText = document.getElementById("progressText");
   const progressFill = document.getElementById("progressFill");
   const progressMessage = document.getElementById("progressMessage");
+
+  if (
+    !submitBtn ||
+    !output ||
+    !progressContainer ||
+    !progressText ||
+    !progressFill ||
+    !progressMessage
+  ) {
+    return;
+  }
 
   // Disable form elements
   setFormReadonly(true);
@@ -417,7 +519,9 @@ async function handleSubmit(event) {
 
     // Show output location when we get the first progress update
     if (progress === 5) {
-      const selectedPath = document.getElementById("outputFolder").value;
+      const selectedPath = (
+        document.getElementById("outputFolder") as HTMLInputElement
+      )?.value;
       output.textContent += `\n📁 Output will be saved to: ${selectedPath}`;
       output.scrollTop = output.scrollHeight;
     }
@@ -446,34 +550,42 @@ async function handleSubmit(event) {
   try {
     const formData = {
       workDuration: parseInt(
-        document.getElementById("workDuration").value
+        (document.getElementById("workDuration") as HTMLSelectElement)?.value ||
+          "0"
       ),
       restDuration: parseInt(
-        document.getElementById("restDuration").value
+        (document.getElementById("restDuration") as HTMLSelectElement)?.value ||
+          "0"
       ),
       setsPerStation: parseInt(
-        document.getElementById("setsPerStation").value
+        (document.getElementById("setsPerStation") as HTMLSelectElement)
+          ?.value || "0"
       ),
-      stationRest: parseInt(document.getElementById("stationRest").value),
+      stationRest: parseInt(
+        (document.getElementById("stationRest") as HTMLSelectElement)?.value ||
+          "0"
+      ),
       totalWorkoutDuration: parseInt(
-        document.getElementById("totalWorkoutDuration").value
+        (document.getElementById("totalWorkoutDuration") as HTMLSelectElement)
+          ?.value || "0"
       ),
       categories: getSelectedCategories(),
       equipment: getSelectedEquipment(),
-      outputPath: document.getElementById("outputFolder").value,
+      outputPath: (document.getElementById("outputFolder") as HTMLInputElement)
+        ?.value,
     };
 
     const result = await window.api.generateWorkoutVideo(formData);
     output.textContent += `\n✅ Workout video generated successfully!\nOutput file: ${result}`;
-    
+
     // Auto-save settings after successful generation
     await saveCurrentSettings();
   } catch (error) {
-    output.textContent += `\n❌ Error: ${error.message}`;
+    output.textContent += `\n❌ Error: ${(error as Error).message}`;
   } finally {
     // Re-enable form elements
     setFormReadonly(false);
-    
+
     submitBtn.disabled = false;
     submitBtn.textContent = "🎬 Generate Workout Video";
 
@@ -492,17 +604,17 @@ async function handleSubmit(event) {
 }
 
 // Debug function
-async function debugFfmpeg() {
+async function debugFfmpeg(): Promise<void> {
   const output = document.getElementById("output");
+  if (!output) return;
+
   output.textContent = "🔧 Debugging FFmpeg installation...\n";
 
   try {
     const debugInfo = await window.api.debugFfmpeg();
     output.textContent += `\n📋 FFmpeg Debug Information:\n`;
     output.textContent += `Path: ${debugInfo.ffmpegPath}\n`;
-    output.textContent += `Exists: ${
-      debugInfo.exists ? "✅ Yes" : "❌ No"
-    }\n`;
+    output.textContent += `Exists: ${debugInfo.exists ? "✅ Yes" : "❌ No"}\n`;
     output.textContent += `Resources Path: ${debugInfo.resourcesPath}\n`;
     output.textContent += `Current Directory: ${debugInfo.currentDir}\n`;
     output.textContent += `Development Mode: ${
@@ -519,7 +631,7 @@ async function debugFfmpeg() {
 
     output.scrollTop = output.scrollHeight;
   } catch (error) {
-    output.textContent += `\n❌ Debug Error: ${error.message}\n`;
+    output.textContent += `\n❌ Debug Error: ${(error as Error).message}\n`;
     output.scrollTop = output.scrollHeight;
   }
 }
@@ -534,24 +646,26 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Reload equipment when categories change
   document.addEventListener("change", (event) => {
-    if (event.target.name === "categories") {
+    if ((event.target as HTMLInputElement)?.name === "categories") {
       loadEquipment();
     }
   });
 
   // Form submission
-  document
-    .getElementById("workoutForm")
-    .addEventListener("submit", handleSubmit);
+  const workoutForm = document.getElementById("workoutForm");
+  if (workoutForm) {
+    workoutForm.addEventListener("submit", handleSubmit);
+  }
 
   // Folder selection button
-  document
-    .getElementById("selectFolderBtn")
-    .addEventListener("click", selectOutputFolder);
+  const selectFolderBtn = document.getElementById("selectFolderBtn");
+  if (selectFolderBtn) {
+    selectFolderBtn.addEventListener("click", selectOutputFolder);
+  }
 
   // Debug button (if it exists)
   const debugBtn = document.getElementById("debugBtn");
   if (debugBtn) {
     debugBtn.addEventListener("click", debugFfmpeg);
   }
-}); 
+});

@@ -1,6 +1,6 @@
 # Generator Module Tests
 
-This directory contains comprehensive unit tests for the `generator.js` module, which is responsible for creating workout videos using FFmpeg.
+This directory contains comprehensive unit tests for the `generator.ts` module, which is responsible for creating workout videos using FFmpeg.
 
 ## Test Files
 
