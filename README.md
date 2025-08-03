@@ -54,7 +54,7 @@ This is an Electron desktop application. All dependencies are bundled with the a
 
 You will need the following installed on your dev system
 
-- NodeJS 20+
+- Node 20+
 - Yarn
 - Git
 
