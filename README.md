@@ -50,6 +50,14 @@ Download the installer for your operating system from the releases tab in this r
 
 This is an Electron desktop application. All dependencies are bundled with the application, so the end user doesn't need to install additional software (such as FFmpeg) or provide exercise videos.
 
+## Development environment
+
+You will need the following installed on your dev system
+
+- NodeJS 20+
+- Yarn
+- Git
+
 ## File/folder structure of important files/folders
 
 ```
