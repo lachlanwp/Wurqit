@@ -499,8 +499,9 @@ async function createCountdownSegment(
     consoleCallback
   );
 
-  // Check if BEEP.mp3 exists
+  // Audio files (assumed to always exist)
   const beepFile = path.join(getBaseMediaDir(), "audio", "BEEP.mp3");
+  const silenceFile = path.join(getBaseMediaDir(), "audio", "silence.mp3");
 
   // Get Oswald font path
   const oswaldFontPath = path.join(getBaseMediaDir(), "images", "Oswald.ttf");
@@ -518,13 +519,18 @@ async function createCountdownSegment(
     bgColor = "darkblue";
   }
 
-  // Create countdown video with text overlay and beep sound
+  // Create countdown video with text overlay, background silence, and beep sound
   const args = [
     "-f",
     "lavfi",
     "-i",
     `color=c=${bgColor}:size=1920x1080:duration=${duration}`,
-    ...(fs.existsSync(beepFile) ? ["-i", beepFile] : []),
+    "-stream_loop",
+    "-1",
+    "-i",
+    silenceFile,
+    "-i",
+    beepFile,
     "-filter_complex",
     `[0:v]drawtext=text='${text}':fontfile='${oswaldFontPath.replace(
       /\\/g,
@@ -532,12 +538,11 @@ async function createCountdownSegment(
     )}':fontcolor=white:fontsize=72:x=(w-text_w)/2:y=(h-text_h)/2,drawtext=text='%{eif\\:(${duration}-t)\\:d\\:2}':fontfile='${oswaldFontPath.replace(
       /\\/g,
       "/"
-    )}':fontcolor=white:fontsize=120:x=(w-text_w)/2:y=(h-text_h)/2+100[v]${
-      fs.existsSync(beepFile) ? ";[1:a]adelay=0|0[beep]" : ""
-    }`,
+    )}':fontcolor=white:fontsize=120:x=(w-text_w)/2:y=(h-text_h)/2+100[v];[1:a]aloop=loop=-1:size=44100,atrim=0:${duration}[bg];[2:a]adelay=0|0[beep];[bg][beep]amix=inputs=2:duration=first[audio]`,
     "-map",
     "[v]",
-    ...(fs.existsSync(beepFile) ? ["-map", "[beep]"] : ["-an"]),
+    "-map",
+    "[audio]",
     "-c:v",
     "libx264",
     "-preset",
@@ -596,8 +601,9 @@ async function createExerciseSegment(
   // Get exercise name for display
   const exerciseName = formatExerciseName(videoFile);
 
-  // Check if BEEP.mp3 exists
+  // Audio files (assumed to always exist)
   const beepFile = path.join(getBaseMediaDir(), "audio", "BEEP.mp3");
+  const silenceFile = path.join(getBaseMediaDir(), "audio", "silence.mp3");
 
   // Create progress grid overlay filter
   const gridOverlay = createProgressGridOverlay(
@@ -615,7 +621,7 @@ async function createExerciseSegment(
     throw new Error(`Oswald font not found: ${oswaldFontPath}`);
   }
 
-  // Create exercise video with looped video, exercise name, progress grid, countdown, and beep sound
+  // Create exercise video with looped video, exercise name, progress grid, countdown, background silence, and beep sound
   const args = [
     "-stream_loop",
     "-1",
@@ -627,7 +633,12 @@ async function createExerciseSegment(
     "lavfi",
     "-i",
     `color=c=darkgreen:size=1920x1080:duration=${duration}`,
-    ...(fs.existsSync(beepFile) ? ["-i", beepFile] : []),
+    "-stream_loop",
+    "-1",
+    "-i",
+    silenceFile,
+    "-i",
+    beepFile,
     "-filter_complex",
     `[0:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2[scaled];[1:v][scaled]overlay=(W-w)/2:(H-h)/2,drawtext=text='${exerciseName}':fontfile='${oswaldFontPath.replace(
       /\\/g,
@@ -635,12 +646,11 @@ async function createExerciseSegment(
     )}':fontcolor=white:fontsize=60:x=(w-text_w)/2:y=h-200:box=1:boxcolor=black@0.7:boxborderw=5,drawtext=text='%{eif\\:(${duration}-t)\\:d\\:2}':fontfile='${oswaldFontPath.replace(
       /\\/g,
       "/"
-    )}':fontcolor=white:fontsize=72:x=(w-text_w)/2:y=h-100:box=1:boxcolor=black@0.7:boxborderw=5,${gridOverlay}[v]${
-      fs.existsSync(beepFile) ? ";[2:a]adelay=0|0[beep]" : ""
-    }`,
+    )    }':fontcolor=white:fontsize=72:x=(w-text_w)/2:y=h-100:box=1:boxcolor=black@0.7:boxborderw=5,${gridOverlay}[v];[2:a]aloop=loop=-1:size=44100,atrim=0:${duration}[bg];[3:a]adelay=0|0[beep];[bg][beep]amix=inputs=2:duration=first[audio]`,
     "-map",
     "[v]",
-    ...(fs.existsSync(beepFile) ? ["-map", "[beep]"] : ["-an"]),
+    "-map",
+    "[audio]",
     "-c:v",
     "libx264",
     "-preset",
@@ -698,8 +708,9 @@ async function createStationChangeSegment(
   // Get next exercise name for display
   const nextExerciseName = formatExerciseName(nextExerciseFile);
 
-  // Check if BEEP.mp3 exists
+  // Audio files (assumed to always exist)
   const beepFile = path.join(getBaseMediaDir(), "audio", "BEEP.mp3");
+  const silenceFile = path.join(getBaseMediaDir(), "audio", "silence.mp3");
 
   // Get Oswald font path
   const oswaldFontPath = path.join(getBaseMediaDir(), "images", "Oswald.ttf");
@@ -709,7 +720,7 @@ async function createStationChangeSegment(
     throw new Error(`Oswald font not found: ${oswaldFontPath}`);
   }
 
-  // Create station change video with preview of next exercise
+  // Create station change video with preview of next exercise, background silence, and beep sound
   const args = [
     "-stream_loop",
     "-1",
@@ -721,7 +732,12 @@ async function createStationChangeSegment(
     "lavfi",
     "-i",
     `color=c=black:size=1920x1080:duration=${duration}`,
-    ...(fs.existsSync(beepFile) ? ["-i", beepFile] : []),
+    "-stream_loop",
+    "-1",
+    "-i",
+    silenceFile,
+    "-i",
+    beepFile,
     "-filter_complex",
     `[0:v]scale=600:600:force_original_aspect_ratio=decrease,pad=600:600:(ow-iw)/2:(oh-ih)/2[scaled];[1:v][scaled]overlay=(W-w)/2:(H-h)/2,drawtext=text='NEXT EXERCISE':fontfile='${oswaldFontPath.replace(
       /\\/g,
@@ -732,12 +748,11 @@ async function createStationChangeSegment(
     )}':fontcolor=white:fontsize=48:x=(w-text_w)/2:y=150,drawtext=text='%{eif\\:(${duration}-t)\\:d\\:2}':fontfile='${oswaldFontPath.replace(
       /\\/g,
       "/"
-    )}':fontcolor=white:fontsize=120:x=(w-text_w)/2:y=h-100[v]${
-      fs.existsSync(beepFile) ? ";[2:a]adelay=0|0[beep]" : ""
-    }`,
+    )    }':fontcolor=white:fontsize=120:x=(w-text_w)/2:y=h-100[v];[2:a]aloop=loop=-1:size=44100,atrim=0:${duration}[bg];[3:a]adelay=0|0[beep];[bg][beep]amix=inputs=2:duration=first[audio]`,
     "-map",
     "[v]",
-    ...(fs.existsSync(beepFile) ? ["-map", "[beep]"] : ["-an"]),
+    "-map",
+    "[audio]",
     "-c:v",
     "libx264",
     "-preset",
@@ -1181,6 +1196,9 @@ async function generateWorkoutVideo(
               "images",
               "Oswald.ttf"
             );
+            
+            // Audio files (assumed to always exist)
+            const silenceFile = path.join(getBaseMediaDir(), "audio", "silence.mp3");
 
             // Check if font file exists
             if (!fs.existsSync(oswaldFontPath)) {
@@ -1193,10 +1211,20 @@ async function generateWorkoutVideo(
                 consoleCallback
               );
 
-              // Simple transcoding without text overlay
+              // Simple transcoding without text overlay but with background silence
               const simpleTranscodeArgs = [
                 "-i",
                 originalVideo,
+                "-stream_loop",
+                "-1",
+                "-i",
+                silenceFile,
+                "-filter_complex",
+                `[0:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black[v];[1:a]aloop=loop=-1:size=44100,atrim=0:${fs.statSync(originalVideo).size / 1024 / 1024 > 10 ? "30" : "15"}[bg];[bg]anull[audio]`,
+                "-map",
+                "[v]",
+                "-map",
+                "[audio]",
                 "-c:v",
                 "libx264",
                 "-preset",
@@ -1218,6 +1246,10 @@ async function generateWorkoutVideo(
               const transcodeArgs = [
                 "-i",
                 originalVideo,
+                "-stream_loop",
+                "-1",
+                "-i",
+                silenceFile,
                 "-filter_complex",
                 `[0:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black,drawtext=text='CONGRATULATIONS!':fontfile='${oswaldFontPath.replace(
                   /\\/g,
@@ -1225,9 +1257,11 @@ async function generateWorkoutVideo(
                 )}':fontcolor=white:fontsize=72:x=(w-text_w)/2:y=50:box=1:boxcolor=black@0.7:boxborderw=5,drawtext=text='YOU COMPLETED THE WORKOUT!':fontfile='${oswaldFontPath.replace(
                   /\\/g,
                   "/"
-                )}':fontcolor=white:fontsize=60:x=(w-text_w)/2:y=150:box=1:boxcolor=black@0.7:boxborderw=5[v]`,
+                )}':fontcolor=white:fontsize=60:x=(w-text_w)/2:y=150:box=1:boxcolor=black@0.7:boxborderw=5[v];[1:a]aloop=loop=-1:size=44100,atrim=0:${fs.statSync(originalVideo).size / 1024 / 1024 > 10 ? "30" : "15"}[bg];[bg]anull[audio]`,
                 "-map",
                 "[v]",
+                "-map",
+                "[audio]",
                 "-c:v",
                 "libx264",
                 "-preset",
@@ -1236,7 +1270,8 @@ async function generateWorkoutVideo(
                 "23",
                 "-r",
                 "25",
-                "-an",
+                "-c:a",
+                "aac",
                 "-y",
                 transcodedVideo,
               ];
@@ -1293,12 +1328,8 @@ async function generateWorkoutVideo(
 
     // Update progress
     if (progressCallback) {
-      progressCallback(85, "Creating file list for concatenation...");
+      progressCallback(85, "Preparing for video concatenation...");
     }
-
-    // Create file list for concatenation
-    const fileList = path.join(tempDir, "file_list.txt");
-    createFileList(fileList, segments);
 
     // Update progress
     if (progressCallback) {
@@ -1318,9 +1349,7 @@ async function generateWorkoutVideo(
     printStatus(`Output will be saved to: ${outputDir}`, consoleCallback);
     printStatus("Concatenating video segments...", consoleCallback);
 
-    // Show file list for debugging
-    printStatus("File list contents:", consoleCallback);
-    logToBoth(fs.readFileSync(fileList, "utf8"));
+
 
     // Debug: Show segments array and verify each segment
     printStatus(
@@ -1365,17 +1394,34 @@ async function generateWorkoutVideo(
       }
     }
 
+        // Use individual input files with concat filter
+    const inputArgs: string[] = [];
+    for (const segment of segments) {
+      inputArgs.push("-i", segment);
+    }
+    
     const concatArgs = [
-      "-f",
-      "concat",
-      "-safe",
-      "0",
-      "-i",
-      fileList,
-      "-c",
-      "copy",
-      "-avoid_negative_ts",
-      "make_zero",
+      ...inputArgs,
+      "-filter_complex",
+      segments.map((_, index) => `[${index}:v][${index}:a]`).join("") + `concat=n=${segments.length}:v=1:a=1[outv][outa]`,
+      "-map",
+      "[outv]",
+      "-map",
+      "[outa]",
+      "-c:v",
+      "libx264",
+      "-preset",
+      "medium",
+      "-crf",
+      "23",
+      "-r",
+      "25",
+      "-pix_fmt",
+      "yuv420p",
+      "-c:a",
+      "aac",
+      "-b:a",
+      "128k",
       "-y",
       outputFile,
     ];
