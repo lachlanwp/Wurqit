@@ -15,6 +15,7 @@ import {
   generateWorkoutVideo,
   getFfmpegPath,
 } from "./generator";
+import { checkForUpdates, setMainWindow } from "./update";
 import isDev from "electron-is-dev";
 import * as remoteElectron from "@electron/remote/main";
 let mainWindow;
@@ -109,6 +110,16 @@ function setupMenus() {
       role: "help",
       submenu: [
         {
+          label: "Check for Updates",
+          click: async () => {
+            try {
+              await checkForUpdates();
+            } catch (error) {
+              console.error('Manual update check failed:', error);
+            }
+          },
+        },
+        {
           label: "Learn More",
           click: async () => {
             const { shell } = require("electron");
@@ -139,6 +150,9 @@ function createMainWindow(andShow: boolean = false): void {
     // Add crash prevention
     show: false, // Don't show until ready
   });
+
+  // Set the main window reference for the update module
+  setMainWindow(mainWindow);
 
   // Handle window crashes
   mainWindow.webContents.on("crashed", (event, killed) => {
@@ -176,6 +190,13 @@ function createWindow() {
     setTimeout(() => {
       splash.close();
       mainWindow.show();
+      
+      // Check for updates after a short delay to not interfere with app startup
+      setTimeout(() => {
+        checkForUpdates().catch(error => {
+          console.error('Update check failed:', error);
+        });
+      }, 1000);
     }, 5000);
   });
 
