@@ -14,6 +14,7 @@ import {
   getEquipment,
   generateWorkoutVideo,
   getFfmpegPath,
+  getAvailableVideos,
 } from "./generator";
 import { checkForUpdates, setMainWindow } from "./update";
 import isDev from "electron-is-dev";
@@ -249,6 +250,7 @@ ipcMain.handle("generate-workout-video", async (event, formData: any) => {
       totalWorkoutDuration,
       categories,
       equipment,
+      selectedVideos,
       outputPath,
     } = formData;
 
@@ -271,6 +273,7 @@ ipcMain.handle("generate-workout-video", async (event, formData: any) => {
       categories,
       equipment,
       outputPath,
+      selectedVideos,
       progressCallback,
       consoleCallback
     );
@@ -365,6 +368,15 @@ ipcMain.handle("run-ffmpeg", async () => {
       reject(err);
     });
   });
+});
+
+// Handle getting available videos for selection
+ipcMain.handle("get-available-videos", async (event, categories: string[], equipment: string[]) => {
+  try {
+    return getAvailableVideos(categories, equipment);
+  } catch (error) {
+    throw new Error(`Failed to get available videos: ${(error as Error).message}`);
+  }
 });
 
 app.whenReady().then(createWindow);

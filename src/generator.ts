@@ -928,6 +928,60 @@ function selectExercisesEvenly(
   return selectedExercises;
 }
 
+// Function to get all available exercise videos with metadata
+function getAvailableVideos(
+  categories: string[],
+  equipment: string[]
+): Array<{
+  path: string;
+  category: string;
+  equipment: string;
+  exerciseName: string;
+  filename: string;
+}> {
+  const videosDir = getVideosDir();
+  const availableVideos: Array<{
+    path: string;
+    category: string;
+    equipment: string;
+    exerciseName: string;
+    filename: string;
+  }> = [];
+
+  for (const category of categories) {
+    const categoryDir = path.join(videosDir, category);
+    if (fs.existsSync(categoryDir)) {
+      for (const equip of equipment) {
+        const equipDir = path.join(categoryDir, equip);
+        if (fs.existsSync(equipDir)) {
+          try {
+            const items = fs.readdirSync(equipDir);
+            for (const item of items) {
+              if (item.toLowerCase().endsWith(".mp4")) {
+                const videoPath = path.join(equipDir, item);
+                const exerciseName = formatExerciseName(item);
+                availableVideos.push({
+                  path: videoPath,
+                  category: category,
+                  equipment: equip,
+                  exerciseName: exerciseName,
+                  filename: item,
+                });
+              }
+            }
+          } catch (error) {
+            console.warn(
+              `Could not read directory ${equipDir}: ${(error as Error).message}`
+            );
+          }
+        }
+      }
+    }
+  }
+
+  return availableVideos;
+}
+
 // Main function to generate workout video
 async function generateWorkoutVideo(
   workDuration: number,
@@ -938,6 +992,7 @@ async function generateWorkoutVideo(
   categories: string[],
   equipment: string[],
   outputPath: string | null = null,
+  selectedVideos: string[] | null = null,
   progressCallback: ((progress: number, message: string) => void) | null = null,
   consoleCallback: ((level: string, message: string) => void) | null = null
 ): Promise<string> {
@@ -1026,17 +1081,26 @@ async function generateWorkoutVideo(
       progressCallback(15, "Selecting exercises...");
     }
 
-    // Select exercises with even distribution across equipment types
-    printStatus(
-      "Selecting exercises with even distribution across equipment types...",
-      consoleCallback
-    );
-    const exerciseVideos = selectExercisesEvenly(
-      maxExercises,
-      categories,
-      equipment,
-      consoleCallback
-    );
+    // Use provided selected videos or select exercises with even distribution across equipment types
+    let exerciseVideos: string[];
+    if (selectedVideos && selectedVideos.length > 0) {
+      printStatus(
+        `Using ${selectedVideos.length} user-selected exercises`,
+        consoleCallback
+      );
+      exerciseVideos = selectedVideos;
+    } else {
+      printStatus(
+        "Selecting exercises with even distribution across equipment types...",
+        consoleCallback
+      );
+      exerciseVideos = selectExercisesEvenly(
+        maxExercises,
+        categories,
+        equipment,
+        consoleCallback
+      );
+    }
 
     if (exerciseVideos.length === 0) {
       throw new Error("No exercise videos found or selected!");
@@ -1513,4 +1577,5 @@ export {
   selectExercisesEvenly,
   generateWorkoutVideo,
   getVideosDir,
+  getAvailableVideos,
 };

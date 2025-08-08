@@ -3,6 +3,17 @@ document.addEventListener("contextmenu", function (e) {
   e.preventDefault();
 });
 
+// Global variables for video selection
+let availableVideos: Array<{
+  path: string;
+  category: string;
+  equipment: string;
+  exerciseName: string;
+  filename: string;
+}> = [];
+let selectedVideos: string[] = [];
+let maxSelectableVideos: number = 0;
+
 // Populate dropdown options
 function populateDropdowns(): void {
   // Work duration: 20-120 seconds in 5-second increments
@@ -171,6 +182,327 @@ function getSelectedEquipment(): string[] {
   return Array.from(checkboxes).map((cb) => cb.value);
 }
 
+// Load available videos for selection
+async function loadAvailableVideos(): Promise<void> {
+  try {
+    const selectedCategories = getSelectedCategories();
+    const selectedEquipment = getSelectedEquipment();
+
+    if (selectedCategories.length === 0 || selectedEquipment.length === 0) {
+      const container = document.getElementById("videoSelectionContainer");
+      if (container) {
+        container.innerHTML =
+          '<div class="loading">Select categories and equipment first to load videos</div>';
+      }
+      return;
+    }
+
+    const videos = await window.api.getAvailableVideos(
+      selectedCategories,
+      selectedEquipment
+    );
+    availableVideos = videos;
+
+    // Calculate max selectable videos based on workout parameters
+    const workDuration = parseInt(
+      (document.getElementById("workDuration") as HTMLSelectElement)?.value ||
+        "0"
+    );
+    const restDuration = parseInt(
+      (document.getElementById("restDuration") as HTMLSelectElement)?.value ||
+        "0"
+    );
+    const setsPerStation = parseInt(
+      (document.getElementById("setsPerStation") as HTMLSelectElement)?.value ||
+        "0"
+    );
+    const stationRest = parseInt(
+      (document.getElementById("stationRest") as HTMLSelectElement)?.value ||
+        "0"
+    );
+    const totalWorkoutDuration = parseInt(
+      (document.getElementById("totalWorkoutDuration") as HTMLSelectElement)
+        ?.value || "0"
+    );
+
+    if (
+      workDuration &&
+      restDuration &&
+      setsPerStation &&
+      stationRest &&
+      totalWorkoutDuration
+    ) {
+      const totalSeconds = totalWorkoutDuration * 60;
+      const timePerExercise =
+        workDuration * setsPerStation +
+        restDuration * (setsPerStation - 1) +
+        stationRest;
+      maxSelectableVideos = Math.floor(totalSeconds / timePerExercise);
+    } else {
+      maxSelectableVideos = 0;
+    }
+
+    displayAvailableVideos();
+    updateVideoSelectionUI();
+
+    // Auto-select random videos by default (mimicking the old behavior)
+    if (availableVideos.length > 0 && selectedVideos.length === 0) {
+      randomSelectVideos();
+    }
+  } catch (error) {
+    const container = document.getElementById("videoSelectionContainer");
+    if (container) {
+      container.innerHTML = `<div class="error">Error loading videos: ${
+        (error as Error).message
+      }</div>`;
+    }
+  }
+}
+
+// Display available videos in the UI
+function displayAvailableVideos(): void {
+  const container = document.getElementById("videoSelectionContainer");
+  if (!container) return;
+
+  if (availableVideos.length === 0) {
+    container.innerHTML =
+      '<div class="loading">No videos found for selected categories and equipment</div>';
+    return;
+  }
+
+  const videoSelectionContainer = document.createElement("div");
+  videoSelectionContainer.className = "video-selection-container";
+
+  availableVideos.forEach((video) => {
+    const videoItem = document.createElement("div");
+    videoItem.className = "video-item";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.id = `video-${video.path.replace(/[^a-zA-Z0-9]/g, "_")}`;
+    checkbox.value = video.path;
+    checkbox.name = "selectedVideos";
+    checkbox.addEventListener("change", handleVideoSelectionChange);
+
+    const videoInfo = document.createElement("div");
+    videoInfo.className = "video-item-info";
+
+    const videoName = document.createElement("div");
+    videoName.className = "video-item-name";
+    videoName.textContent = video.exerciseName;
+
+    const videoMeta = document.createElement("div");
+    videoMeta.className = "video-item-meta";
+
+    const categorySpan = document.createElement("span");
+    categorySpan.className = "video-item-category";
+    categorySpan.textContent = video.category;
+
+    const equipmentSpan = document.createElement("span");
+    equipmentSpan.className = "video-item-equipment";
+    equipmentSpan.textContent = video.equipment;
+
+    videoMeta.appendChild(categorySpan);
+    videoMeta.appendChild(equipmentSpan);
+
+    // Add video preview
+    const videoPreview = document.createElement("video");
+    videoPreview.className = "video-preview";
+    videoPreview.src = `file://${video.path}`;
+    videoPreview.muted = true;
+    videoPreview.loop = true;
+    videoPreview.controls = false;
+    videoPreview.preload = "metadata";
+
+    // Play on hover, pause on leave
+    videoPreview.addEventListener("mouseenter", () => {
+      videoPreview.play().catch(() => {
+        // Silently handle play errors
+      });
+    });
+    videoPreview.addEventListener("mouseleave", () => {
+      videoPreview.pause();
+      videoPreview.currentTime = 0;
+    });
+
+    // Toggle checkbox on video click
+    videoPreview.addEventListener("click", () => {
+      checkbox.checked = !checkbox.checked;
+      handleVideoSelectionChange();
+    });
+
+    videoPreview.addEventListener("error", () => {
+      // Replace with a placeholder if video fails to load
+      videoPreview.style.display = "none";
+      const placeholder = document.createElement("div");
+      placeholder.className = "video-preview-placeholder";
+      placeholder.innerHTML = "🎬";
+      placeholder.style.cssText = `
+        width: 100%;
+        height: 200px;
+        background-color: #f8f9fa;
+        border: 2px dashed #dee2e6;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        margin: 0 auto;
+      `;
+      videoPreview.parentNode?.insertBefore(placeholder, videoPreview);
+    });
+
+    videoInfo.appendChild(videoName);
+    videoInfo.appendChild(videoMeta);
+    videoItem.appendChild(checkbox);
+    videoItem.appendChild(videoPreview);
+    videoItem.appendChild(videoInfo);
+    videoSelectionContainer.appendChild(videoItem);
+  });
+
+  // Add summary section
+  const summarySection = document.createElement("div");
+  summarySection.className = "video-selection-summary";
+  summarySection.innerHTML = `
+    <h4>Selected Workout Summary</h4>
+    <div id="workoutSummary">No videos selected</div>
+  `;
+
+  container.innerHTML = "";
+  container.appendChild(videoSelectionContainer);
+  container.appendChild(summarySection);
+
+  // Update summary immediately
+  updateWorkoutSummary();
+}
+
+// Handle video selection change
+function handleVideoSelectionChange(): void {
+  const checkboxes = document.querySelectorAll(
+    'input[name="selectedVideos"]:checked'
+  ) as NodeListOf<HTMLInputElement>;
+  selectedVideos = Array.from(checkboxes).map((cb) => cb.value);
+
+  // If user tries to select more than max, uncheck the last one
+  if (selectedVideos.length > maxSelectableVideos && maxSelectableVideos > 0) {
+    const lastChecked = checkboxes[checkboxes.length - 1];
+    if (lastChecked) {
+      lastChecked.checked = false;
+      selectedVideos = selectedVideos.slice(0, -1);
+    }
+  }
+
+  updateVideoSelectionUI();
+  updateWorkoutSummary();
+}
+
+// Update video selection UI
+function updateVideoSelectionUI(): void {
+  const countElement = document.getElementById("videoSelectionCount");
+  const limitElement = document.getElementById("videoSelectionLimit");
+  const selectAllBtn = document.getElementById(
+    "selectAllBtn"
+  ) as HTMLButtonElement;
+  const deselectAllBtn = document.getElementById(
+    "deselectAllBtn"
+  ) as HTMLButtonElement;
+  const randomSelectBtn = document.getElementById(
+    "randomSelectBtn"
+  ) as HTMLButtonElement;
+
+  if (countElement) {
+    countElement.textContent = `${selectedVideos.length} out of ${availableVideos.length} selected`;
+  }
+
+  if (limitElement && maxSelectableVideos > 0) {
+    limitElement.textContent = `(Maximum ${maxSelectableVideos} videos can be selected)`;
+  }
+
+  if (selectAllBtn) {
+    selectAllBtn.disabled = selectedVideos.length === availableVideos.length;
+  }
+
+  if (deselectAllBtn) {
+    deselectAllBtn.disabled = selectedVideos.length === 0;
+  }
+
+  if (randomSelectBtn) {
+    randomSelectBtn.disabled = availableVideos.length === 0;
+  }
+}
+
+// Select all videos (up to max limit)
+function selectAllVideos(): void {
+  const maxToSelect =
+    maxSelectableVideos > 0
+      ? Math.min(maxSelectableVideos, availableVideos.length)
+      : availableVideos.length;
+  const checkboxes = document.querySelectorAll(
+    'input[name="selectedVideos"]'
+  ) as NodeListOf<HTMLInputElement>;
+
+  let selectedCount = 0;
+  checkboxes.forEach((checkbox) => {
+    if (selectedCount < maxToSelect) {
+      checkbox.checked = true;
+      selectedCount++;
+    } else {
+      checkbox.checked = false;
+    }
+  });
+
+  handleVideoSelectionChange();
+}
+
+// Deselect all videos
+function deselectAllVideos(): void {
+  const checkboxes = document.querySelectorAll(
+    'input[name="selectedVideos"]'
+  ) as NodeListOf<HTMLInputElement>;
+  checkboxes.forEach((checkbox) => {
+    checkbox.checked = false;
+  });
+
+  handleVideoSelectionChange();
+}
+
+// Randomly select videos (up to max limit)
+function randomSelectVideos(): void {
+  const maxToSelect =
+    maxSelectableVideos > 0
+      ? Math.min(maxSelectableVideos, availableVideos.length)
+      : availableVideos.length;
+
+  // Shuffle available videos
+  const shuffledVideos = [...availableVideos];
+  for (let i = shuffledVideos.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffledVideos[i], shuffledVideos[j]] = [
+      shuffledVideos[j],
+      shuffledVideos[i],
+    ];
+  }
+
+  // Select first maxToSelect videos
+  const checkboxes = document.querySelectorAll(
+    'input[name="selectedVideos"]'
+  ) as NodeListOf<HTMLInputElement>;
+  checkboxes.forEach((checkbox) => {
+    const videoPath = checkbox.value;
+    const isSelected = shuffledVideos
+      .slice(0, maxToSelect)
+      .some((video) => video.path === videoPath);
+    checkbox.checked = isSelected;
+  });
+
+  handleVideoSelectionChange();
+}
+
+// Get selected videos
+function getSelectedVideos(): string[] {
+  return selectedVideos;
+}
+
 // Save current form settings (silent - no user notification)
 async function saveCurrentSettings(): Promise<void> {
   try {
@@ -202,6 +534,7 @@ async function saveCurrentSettings(): Promise<void> {
         ) || null,
       categories: getSelectedCategories(),
       equipment: getSelectedEquipment(),
+      selectedVideos: getSelectedVideos(),
       outputPath:
         (document.getElementById("outputFolder") as HTMLInputElement)?.value ||
         null,
@@ -294,6 +627,23 @@ async function loadSavedSettings(): Promise<void> {
             checkbox.checked = true;
           }
         });
+
+        // Load videos and restore selected videos
+        setTimeout(() => {
+          loadAvailableVideos().then(() => {
+            if (settings.selectedVideos && settings.selectedVideos.length > 0) {
+              settings.selectedVideos.forEach((videoPath) => {
+                const checkbox = document.querySelector(
+                  `input[name="selectedVideos"][value="${videoPath}"]`
+                ) as HTMLInputElement;
+                if (checkbox) {
+                  checkbox.checked = true;
+                }
+              });
+              handleVideoSelectionChange();
+            }
+          });
+        }, 500);
       }, 1000);
     }
 
@@ -449,6 +799,16 @@ function validateForm(): boolean {
     isValid = false;
   }
 
+  // Validate video selection
+  const selectedVideos = getSelectedVideos();
+  if (selectedVideos.length === 0) {
+    const videoSelectionError = document.getElementById("videoSelectionError");
+    if (videoSelectionError)
+      videoSelectionError.textContent =
+        "Please select at least one exercise video";
+    isValid = false;
+  }
+
   // Validate output folder
   const outputFolder = (
     document.getElementById("outputFolder") as HTMLInputElement
@@ -571,6 +931,7 @@ async function handleSubmit(event: Event): Promise<void> {
       ),
       categories: getSelectedCategories(),
       equipment: getSelectedEquipment(),
+      selectedVideos: getSelectedVideos(),
       outputPath: (document.getElementById("outputFolder") as HTMLInputElement)
         ?.value,
     };
@@ -652,9 +1013,15 @@ function hideUpdateOverlay(): void {
 }
 
 function updateProgress(progress: number, message: string): void {
-  const progressText = document.getElementById("updateProgressText") as HTMLElement;
-  const progressFill = document.getElementById("updateProgressFill") as HTMLElement;
-  const messageElement = document.getElementById("updateMessage") as HTMLElement;
+  const progressText = document.getElementById(
+    "updateProgressText"
+  ) as HTMLElement;
+  const progressFill = document.getElementById(
+    "updateProgressFill"
+  ) as HTMLElement;
+  const messageElement = document.getElementById(
+    "updateMessage"
+  ) as HTMLElement;
 
   if (progressText) {
     progressText.textContent = `${progress}%`;
@@ -667,6 +1034,46 @@ function updateProgress(progress: number, message: string): void {
   if (messageElement) {
     messageElement.textContent = message;
   }
+}
+// Update workout summary
+function updateWorkoutSummary(): void {
+  const summaryElement = document.getElementById("workoutSummary");
+  if (!summaryElement) return;
+
+  const selectedVideos = getSelectedVideos();
+  if (selectedVideos.length === 0) {
+    summaryElement.textContent = "No videos selected";
+    return;
+  }
+
+  const selectedVideoData = availableVideos.filter((v) =>
+    selectedVideos.includes(v.path)
+  );
+  const uniqueCategories = [
+    ...new Set(selectedVideoData.map((v) => v.category)),
+  ];
+  const uniqueEquipment = [
+    ...new Set(selectedVideoData.map((v) => v.equipment)),
+  ];
+  const exerciseNames = selectedVideoData.map((v) => v.exerciseName);
+
+  let summaryText = `${selectedVideos.length} exercise${
+    selectedVideos.length === 1 ? "" : "s"
+  }: `;
+  if (uniqueCategories.length > 0) {
+    summaryText += `${uniqueCategories.length} category${
+      uniqueCategories.length === 1 ? "" : "ies"
+    }: ${uniqueCategories.join(", ")}. `;
+  }
+  if (uniqueEquipment.length > 0) {
+    summaryText += `${uniqueEquipment.length} equipment type${
+      uniqueEquipment.length === 1 ? "" : "s"
+    }: ${uniqueEquipment.join(", ")}. `;
+  }
+  summaryText += `\n\nExercises: ${exerciseNames.join(", ")}`;
+  summaryText = summaryText.trim();
+
+  summaryElement.innerHTML = summaryText.replace(/\n/g, "<br>");
 }
 
 // Event listeners
@@ -681,8 +1088,64 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.addEventListener("change", (event) => {
     if ((event.target as HTMLInputElement)?.name === "categories") {
       loadEquipment();
+      // Hide video selection when categories change
+      const videoSelectionSection = document.getElementById(
+        "videoSelectionSection"
+      );
+      if (videoSelectionSection) {
+        videoSelectionSection.style.display = "none";
+      }
     }
   });
+
+  // Reload videos when equipment changes
+  document.addEventListener("change", (event) => {
+    if ((event.target as HTMLInputElement)?.name === "equipment") {
+      loadAvailableVideos();
+      // Show video selection section when equipment is selected
+      const videoSelectionSection = document.getElementById(
+        "videoSelectionSection"
+      );
+      if (videoSelectionSection) {
+        videoSelectionSection.style.display = "block";
+      }
+    }
+  });
+
+  // Reload videos when workout parameters change
+  document.addEventListener("change", (event) => {
+    const target = event.target as HTMLSelectElement;
+    if (
+      target &&
+      [
+        "workDuration",
+        "restDuration",
+        "setsPerStation",
+        "stationRest",
+        "totalWorkoutDuration",
+      ].includes(target.id)
+    ) {
+      if (availableVideos.length > 0) {
+        loadAvailableVideos();
+      }
+    }
+  });
+
+  // Video selection control buttons
+  const selectAllBtn = document.getElementById("selectAllBtn");
+  if (selectAllBtn) {
+    selectAllBtn.addEventListener("click", selectAllVideos);
+  }
+
+  const deselectAllBtn = document.getElementById("deselectAllBtn");
+  if (deselectAllBtn) {
+    deselectAllBtn.addEventListener("click", deselectAllVideos);
+  }
+
+  const randomSelectBtn = document.getElementById("randomSelectBtn");
+  if (randomSelectBtn) {
+    randomSelectBtn.addEventListener("click", randomSelectVideos);
+  }
 
   // Form submission
   const workoutForm = document.getElementById("workoutForm");
@@ -708,7 +1171,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       showUpdateOverlay();
     }
     updateProgress(data.progress, data.message);
-    
+
     if (data.progress === 100) {
       setTimeout(() => {
         hideUpdateOverlay();
