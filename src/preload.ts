@@ -18,6 +18,10 @@ interface WurqitAPI {
   saveSettings: (settings: any) => Promise<boolean>;
   debugFfmpeg: () => Promise<any>;
   run: () => Promise<string>;
+  onUpdateProgress: (
+    callback: (data: { progress: number; message: string }) => void
+  ) => void;
+  removeUpdateProgress: () => void;
 }
 
 contextBridge.exposeInMainWorld("api", {
@@ -71,6 +75,18 @@ contextBridge.exposeInMainWorld("api", {
 
   // Legacy ffmpeg function (keeping for compatibility)
   run: () => ipcRenderer.invoke("run-ffmpeg"),
+
+  // Listen for update progress updates
+  onUpdateProgress: (
+    callback: (data: { progress: number; message: string }) => void
+  ) => {
+    ipcRenderer.on("update-progress", (event, data) => callback(data));
+  },
+
+  // Remove update progress listener
+  removeUpdateProgress: () => {
+    ipcRenderer.removeAllListeners("update-progress");
+  },
 } as WurqitAPI);
 
 // Extend the global Window interface to include our API

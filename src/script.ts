@@ -636,6 +636,39 @@ async function debugFfmpeg(): Promise<void> {
   }
 }
 
+// Update Progress Functions
+function showUpdateOverlay(): void {
+  const overlay = document.getElementById("updateOverlay") as HTMLElement;
+  if (overlay) {
+    overlay.style.display = "flex";
+  }
+}
+
+function hideUpdateOverlay(): void {
+  const overlay = document.getElementById("updateOverlay") as HTMLElement;
+  if (overlay) {
+    overlay.style.display = "none";
+  }
+}
+
+function updateProgress(progress: number, message: string): void {
+  const progressText = document.getElementById("updateProgressText") as HTMLElement;
+  const progressFill = document.getElementById("updateProgressFill") as HTMLElement;
+  const messageElement = document.getElementById("updateMessage") as HTMLElement;
+
+  if (progressText) {
+    progressText.textContent = `${progress}%`;
+  }
+
+  if (progressFill) {
+    progressFill.style.width = `${progress}%`;
+  }
+
+  if (messageElement) {
+    messageElement.textContent = message;
+  }
+}
+
 // Event listeners
 document.addEventListener("DOMContentLoaded", async () => {
   populateDropdowns();
@@ -668,4 +701,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (debugBtn) {
     debugBtn.addEventListener("click", debugFfmpeg);
   }
+
+  // Set up update progress listener
+  window.api.onUpdateProgress((data: { progress: number; message: string }) => {
+    if (data.progress === 0) {
+      showUpdateOverlay();
+    }
+    updateProgress(data.progress, data.message);
+    
+    if (data.progress === 100) {
+      setTimeout(() => {
+        hideUpdateOverlay();
+      }, 2000); // Hide after 2 seconds when complete
+    }
+  });
 });
