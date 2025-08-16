@@ -74,5 +74,5 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: badges
-          publish_dir: docs/.badge
-          destination_dir: docs/badges
+          publish_dir: .badge
+          destination_dir: badges
