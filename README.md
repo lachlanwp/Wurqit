@@ -1,7 +1,7 @@
 # 💪 Wurqit: Workout Video Generator 🏋️
 
 ![Tests](https://github.com/lachlanwp/wurqit/actions/workflows/tests.yml/badge.svg)
-[![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/lachlanwp/Wurqit/refs/heads/main/docs/badges/coverage.json)](https://github.com/lachlanwp/wurqit/actions/workflows/tests.yml)
+[![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/lachlanwp/Wurqit/refs/heads/badges/docs/badges/coverage.json)](https://github.com/lachlanwp/wurqit/actions/workflows/tests.yml)
 
 <img src="media/images/promo.png" alt="Description" style="max-width:100%; height:auto;" />
 
