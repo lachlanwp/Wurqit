@@ -4,6 +4,24 @@ import { contextBridge, ipcRenderer } from "electron";
 interface WurqitAPI {
   getCategories: () => Promise<string[]>;
   getEquipment: (categories: string[]) => Promise<string[]>;
+  getBodyGroups: (
+    categories: string[],
+    equipment: string[]
+  ) => Promise<string[]>;
+  getAvailableVideos: (
+    categories: string[],
+    equipment: string[],
+    bodyGroups?: string[]
+  ) => Promise<
+    Array<{
+      path: string;
+      category: string;
+      equipment: string;
+      bodyGroup?: string;
+      exerciseName: string;
+      filename: string;
+    }>
+  >;
   selectOutputFolder: () => Promise<string | null>;
   generateWorkoutVideo: (formData: any) => Promise<string>;
   onGenerationProgress: (
@@ -31,6 +49,23 @@ contextBridge.exposeInMainWorld("api", {
   // Get equipment for selected categories
   getEquipment: (categories: string[]) =>
     ipcRenderer.invoke("get-equipment", categories),
+
+  // Get body groups for selected categories + equipment
+  getBodyGroups: (categories: string[], equipment: string[]) =>
+    ipcRenderer.invoke("get-body-groups", categories, equipment),
+
+  // Get available videos for selection
+  getAvailableVideos: (
+    categories: string[],
+    equipment: string[],
+    bodyGroups?: string[]
+  ) =>
+    ipcRenderer.invoke(
+      "get-available-videos",
+      categories,
+      equipment,
+      bodyGroups
+    ),
 
   // Select output folder
   selectOutputFolder: () => ipcRenderer.invoke("select-output-folder"),

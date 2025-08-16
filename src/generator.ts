@@ -8,6 +8,7 @@ import os from "os";
 let categoriesCache: string[] | null = null;
 let equipmentCache = new Map<string, string[]>();
 let videoFilesCache = new Map<string, { [key: string]: string[] }>();
+let bodyGroupsCache = new Map<string, string[]>();
 
 // Function to clear caches when memory usage is high
 function clearCachesIfNeeded(): void {
@@ -338,12 +339,14 @@ function getEquipment(categories: string[]): string[] {
 // Function to get exercise videos grouped by equipment type
 function getExerciseVideosByEquipment(
   categories: string[],
-  equipment: string[]
+  equipment: string[],
+  bodyGroups?: string[]
 ): { [key: string]: string[] } {
+  const normalizedBodyGroups = Array.isArray(bodyGroups) ? bodyGroups : [];
   // Create cache key from categories and equipment
   const cacheKey = `${categories.sort().join(",")}|${equipment
     .sort()
-    .join(",")}`;
+    .join(",")}|${normalizedBodyGroups.sort().join(",")}`;
 
   // Check cache first
   if (videoFilesCache.has(cacheKey)) {
@@ -361,20 +364,51 @@ function getExerciseVideosByEquipment(
 
     for (const category of categories) {
       const equipDir = path.join(videosDir, category, equip);
-      if (fs.existsSync(equipDir)) {
-        try {
-          const items = fs.readdirSync(equipDir);
-          for (const item of items) {
+      if (!fs.existsSync(equipDir)) {
+        continue;
+      }
+      try {
+        const maybeBodyGroups = fs
+          .readdirSync(equipDir)
+          .filter(
+            (p) =>
+              fs.existsSync(path.join(equipDir, p)) &&
+              fs.statSync(path.join(equipDir, p)).isDirectory()
+          );
+
+        // If bodyGroups are provided AND subfolders exist, filter within them.
+        if (maybeBodyGroups.length > 0 && normalizedBodyGroups.length > 0) {
+          for (const group of normalizedBodyGroups) {
+            const groupDir = path.join(equipDir, group);
+            if (fs.existsSync(groupDir)) {
+              try {
+                const items = fs.readdirSync(groupDir);
+                for (const item of items) {
+                  if (item.toLowerCase().endsWith(".mp4")) {
+                    equipmentVideos[equip].push(path.join(groupDir, item));
+                  }
+                }
+              } catch (error) {
+                console.warn(
+                  `Could not read directory ${groupDir}: ${
+                    (error as Error).message
+                  }`
+                );
+              }
+            }
+          }
+        } else {
+          // Fallback: read MP4s directly under equipDir
+          for (const item of fs.readdirSync(equipDir)) {
             if (item.toLowerCase().endsWith(".mp4")) {
               equipmentVideos[equip].push(path.join(equipDir, item));
             }
           }
-        } catch (error) {
-          // Skip equipment directories that can't be read
-          console.warn(
-            `Could not read directory ${equipDir}: ${(error as Error).message}`
-          );
         }
+      } catch (error) {
+        console.warn(
+          `Could not read directory ${equipDir}: ${(error as Error).message}`
+        );
       }
     }
   }
@@ -646,7 +680,7 @@ async function createExerciseSegment(
     )}':fontcolor=white:fontsize=60:x=(w-text_w)/2:y=h-200:box=1:boxcolor=black@0.7:boxborderw=5,drawtext=text='%{eif\\:(${duration}-t)\\:d\\:2}':fontfile='${oswaldFontPath.replace(
       /\\/g,
       "/"
-    )    }':fontcolor=white:fontsize=72:x=(w-text_w)/2:y=h-100:box=1:boxcolor=black@0.7:boxborderw=5,${gridOverlay}[v];[2:a]aloop=loop=-1:size=44100,atrim=0:${duration}[bg];[3:a]adelay=0|0[beep];[bg][beep]amix=inputs=2:duration=first[audio]`,
+    )}':fontcolor=white:fontsize=72:x=(w-text_w)/2:y=h-100:box=1:boxcolor=black@0.7:boxborderw=5,${gridOverlay}[v];[2:a]aloop=loop=-1:size=44100,atrim=0:${duration}[bg];[3:a]adelay=0|0[beep];[bg][beep]amix=inputs=2:duration=first[audio]`,
     "-map",
     "[v]",
     "-map",
@@ -748,7 +782,7 @@ async function createStationChangeSegment(
     )}':fontcolor=white:fontsize=48:x=(w-text_w)/2:y=150,drawtext=text='%{eif\\:(${duration}-t)\\:d\\:2}':fontfile='${oswaldFontPath.replace(
       /\\/g,
       "/"
-    )    }':fontcolor=white:fontsize=120:x=(w-text_w)/2:y=h-100[v];[2:a]aloop=loop=-1:size=44100,atrim=0:${duration}[bg];[3:a]adelay=0|0[beep];[bg][beep]amix=inputs=2:duration=first[audio]`,
+    )}':fontcolor=white:fontsize=120:x=(w-text_w)/2:y=h-100[v];[2:a]aloop=loop=-1:size=44100,atrim=0:${duration}[bg];[3:a]adelay=0|0[beep];[bg][beep]amix=inputs=2:duration=first[audio]`,
     "-map",
     "[v]",
     "-map",
@@ -840,11 +874,16 @@ function selectExercisesEvenly(
   maxExercises: number,
   selectedCategories: string[],
   selectedEquipment: string[],
+  selectedBodyGroups: string[] | undefined,
   consoleCallback: ((level: string, message: string) => void) | null = null
 ): string[] {
+  const normalizedGroups = Array.isArray(selectedBodyGroups)
+    ? selectedBodyGroups
+    : [];
   const equipmentVideos = getExerciseVideosByEquipment(
     selectedCategories,
-    selectedEquipment
+    selectedEquipment,
+    normalizedGroups
   );
 
   // Calculate exercises per equipment type
@@ -928,6 +967,138 @@ function selectExercisesEvenly(
   return selectedExercises;
 }
 
+// Function to get all available exercise videos with metadata
+function getAvailableVideos(
+  categories: string[],
+  equipment: string[],
+  bodyGroups?: string[]
+): Array<{
+  path: string;
+  category: string;
+  equipment: string;
+  bodyGroup?: string;
+  exerciseName: string;
+  filename: string;
+}> {
+  const videosDir = getVideosDir();
+  const availableVideos: Array<{
+    path: string;
+    category: string;
+    equipment: string;
+    bodyGroup?: string;
+    exerciseName: string;
+    filename: string;
+  }> = [];
+
+  const normalizedGroups = Array.isArray(bodyGroups) ? bodyGroups : [];
+
+  for (const category of categories) {
+    const categoryDir = path.join(videosDir, category);
+    if (fs.existsSync(categoryDir)) {
+      for (const equip of equipment) {
+        const equipDir = path.join(categoryDir, equip);
+        if (fs.existsSync(equipDir)) {
+          try {
+            const subdirs = fs
+              .readdirSync(equipDir)
+              .filter(
+                (p) =>
+                  fs.existsSync(path.join(equipDir, p)) &&
+                  fs.statSync(path.join(equipDir, p)).isDirectory()
+              );
+
+            if (subdirs.length > 0) {
+              const groupsToScan =
+                normalizedGroups.length > 0 ? normalizedGroups : subdirs;
+              for (const group of groupsToScan) {
+                const groupDir = path.join(equipDir, group);
+                if (!fs.existsSync(groupDir)) continue;
+                const items = fs.readdirSync(groupDir);
+                for (const item of items) {
+                  if (item.toLowerCase().endsWith(".mp4")) {
+                    const videoPath = path.join(groupDir, item);
+                    const exerciseName = formatExerciseName(item);
+                    availableVideos.push({
+                      path: videoPath,
+                      category,
+                      equipment: equip,
+                      bodyGroup: group,
+                      exerciseName,
+                      filename: item,
+                    });
+                  }
+                }
+              }
+            } else {
+              const items = fs.readdirSync(equipDir);
+              for (const item of items) {
+                if (item.toLowerCase().endsWith(".mp4")) {
+                  const videoPath = path.join(equipDir, item);
+                  const exerciseName = formatExerciseName(item);
+                  availableVideos.push({
+                    path: videoPath,
+                    category,
+                    equipment: equip,
+                    exerciseName,
+                    filename: item,
+                  });
+                }
+              }
+            }
+          } catch (error) {
+            console.warn(
+              `Could not read directory ${equipDir}: ${
+                (error as Error).message
+              }`
+            );
+          }
+        }
+      }
+    }
+  }
+
+  return availableVideos;
+}
+
+// Discover available body groups under selected categories+equipment
+function getBodyGroups(categories: string[], equipment: string[]): string[] {
+  const cacheKey = `${categories.sort().join(",")}__${equipment
+    .sort()
+    .join(",")}`;
+  if (bodyGroupsCache.has(cacheKey)) {
+    return bodyGroupsCache.get(cacheKey)!;
+  }
+
+  const videosDir = getVideosDir();
+  const groups = new Set<string>();
+
+  for (const category of categories) {
+    for (const equip of equipment) {
+      const equipDir = path.join(videosDir, category, equip);
+      if (!fs.existsSync(equipDir)) continue;
+      try {
+        const entries = fs.readdirSync(equipDir);
+        for (const entry of entries) {
+          const entryPath = path.join(equipDir, entry);
+          try {
+            if (fs.statSync(entryPath).isDirectory()) {
+              groups.add(entry);
+            }
+          } catch (e) {
+            // ignore
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+  }
+
+  const result = Array.from(groups);
+  bodyGroupsCache.set(cacheKey, result);
+  return result;
+}
+
 // Main function to generate workout video
 async function generateWorkoutVideo(
   workDuration: number,
@@ -937,10 +1108,25 @@ async function generateWorkoutVideo(
   totalWorkoutDuration: number,
   categories: string[],
   equipment: string[],
+  bodyGroups: string[] | undefined,
   outputPath: string | null = null,
+  selectedVideos: string[] | null = null,
   progressCallback: ((progress: number, message: string) => void) | null = null,
   consoleCallback: ((level: string, message: string) => void) | null = null
 ): Promise<string> {
+  // Back-compat for older callers that didn't pass bodyGroups
+  let normalizedBodyGroups: string[] = Array.isArray(bodyGroups)
+    ? bodyGroups
+    : [];
+  let resolvedOutputPath: string | null = outputPath;
+  if (
+    !Array.isArray(bodyGroups) &&
+    typeof (bodyGroups as any) === "string" &&
+    (outputPath === null || outputPath === undefined)
+  ) {
+    resolvedOutputPath = bodyGroups as unknown as string;
+    normalizedBodyGroups = [];
+  }
   // Helper function to log to both console and browser
   const logToBoth = (message: string) => {
     console.log(message);
@@ -1026,17 +1212,27 @@ async function generateWorkoutVideo(
       progressCallback(15, "Selecting exercises...");
     }
 
-    // Select exercises with even distribution across equipment types
-    printStatus(
-      "Selecting exercises with even distribution across equipment types...",
-      consoleCallback
-    );
-    const exerciseVideos = selectExercisesEvenly(
-      maxExercises,
-      categories,
-      equipment,
-      consoleCallback
-    );
+    // Use provided selected videos or select exercises with even distribution across equipment types
+    let exerciseVideos: string[];
+    if (selectedVideos && selectedVideos.length > 0) {
+      printStatus(
+        `Using ${selectedVideos.length} user-selected exercises`,
+        consoleCallback
+      );
+      exerciseVideos = selectedVideos;
+    } else {
+      printStatus(
+        "Selecting exercises with even distribution across equipment types...",
+        consoleCallback
+      );
+      exerciseVideos = selectExercisesEvenly(
+        maxExercises,
+        categories,
+        equipment,
+        normalizedBodyGroups,
+        consoleCallback
+      );
+    }
 
     if (exerciseVideos.length === 0) {
       throw new Error("No exercise videos found or selected!");
@@ -1196,9 +1392,13 @@ async function generateWorkoutVideo(
               "images",
               "Oswald.ttf"
             );
-            
+
             // Audio files (assumed to always exist)
-            const silenceFile = path.join(getBaseMediaDir(), "audio", "silence.mp3");
+            const silenceFile = path.join(
+              getBaseMediaDir(),
+              "audio",
+              "silence.mp3"
+            );
 
             // Check if font file exists
             if (!fs.existsSync(oswaldFontPath)) {
@@ -1220,7 +1420,11 @@ async function generateWorkoutVideo(
                 "-i",
                 silenceFile,
                 "-filter_complex",
-                `[0:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black[v];[1:a]aloop=loop=-1:size=44100,atrim=0:${fs.statSync(originalVideo).size / 1024 / 1024 > 10 ? "30" : "15"}[bg];[bg]anull[audio]`,
+                `[0:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black[v];[1:a]aloop=loop=-1:size=44100,atrim=0:${
+                  fs.statSync(originalVideo).size / 1024 / 1024 > 10
+                    ? "30"
+                    : "15"
+                }[bg];[bg]anull[audio]`,
                 "-map",
                 "[v]",
                 "-map",
@@ -1257,7 +1461,11 @@ async function generateWorkoutVideo(
                 )}':fontcolor=white:fontsize=72:x=(w-text_w)/2:y=50:box=1:boxcolor=black@0.7:boxborderw=5,drawtext=text='YOU COMPLETED THE WORKOUT!':fontfile='${oswaldFontPath.replace(
                   /\\/g,
                   "/"
-                )}':fontcolor=white:fontsize=60:x=(w-text_w)/2:y=150:box=1:boxcolor=black@0.7:boxborderw=5[v];[1:a]aloop=loop=-1:size=44100,atrim=0:${fs.statSync(originalVideo).size / 1024 / 1024 > 10 ? "30" : "15"}[bg];[bg]anull[audio]`,
+                )}':fontcolor=white:fontsize=60:x=(w-text_w)/2:y=150:box=1:boxcolor=black@0.7:boxborderw=5[v];[1:a]aloop=loop=-1:size=44100,atrim=0:${
+                  fs.statSync(originalVideo).size / 1024 / 1024 > 10
+                    ? "30"
+                    : "15"
+                }[bg];[bg]anull[audio]`,
                 "-map",
                 "[v]",
                 "-map",
@@ -1337,19 +1545,17 @@ async function generateWorkoutVideo(
     }
 
     // Get output path and create output filename
-    if (!outputPath) {
+    if (!resolvedOutputPath) {
       throw new Error(
         "Output path is required. Please select a folder to save the video."
       );
     }
-    const outputDir = outputPath;
+    const outputDir = resolvedOutputPath;
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const outputFile = path.join(outputDir, `workout_video_${timestamp}.mp4`);
 
     printStatus(`Output will be saved to: ${outputDir}`, consoleCallback);
     printStatus("Concatenating video segments...", consoleCallback);
-
-
 
     // Debug: Show segments array and verify each segment
     printStatus(
@@ -1394,16 +1600,17 @@ async function generateWorkoutVideo(
       }
     }
 
-        // Use individual input files with concat filter
+    // Use individual input files with concat filter
     const inputArgs: string[] = [];
     for (const segment of segments) {
       inputArgs.push("-i", segment);
     }
-    
+
     const concatArgs = [
       ...inputArgs,
       "-filter_complex",
-      segments.map((_, index) => `[${index}:v][${index}:a]`).join("") + `concat=n=${segments.length}:v=1:a=1[outv][outa]`,
+      segments.map((_, index) => `[${index}:v][${index}:a]`).join("") +
+        `concat=n=${segments.length}:v=1:a=1[outv][outa]`,
       "-map",
       "[outv]",
       "-map",
@@ -1513,4 +1720,6 @@ export {
   selectExercisesEvenly,
   generateWorkoutVideo,
   getVideosDir,
+  getAvailableVideos,
+  getBodyGroups,
 };

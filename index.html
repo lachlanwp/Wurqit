@@ -110,104 +110,252 @@
         <h1 class="app-title">WURQIT</h1>
       </div>
 
+      <!-- Workflow Progress Bar -->
+      <div class="workflow-progress">
+        <div class="workflow-step active" data-step="1">
+          <div class="step-number">1</div>
+          <div class="step-label">Duration</div>
+        </div>
+        <div class="workflow-step" data-step="2">
+          <div class="step-number">2</div>
+          <div class="step-label">Categories</div>
+        </div>
+        <div class="workflow-step" data-step="3">
+          <div class="step-number">3</div>
+          <div class="step-label">Equipment</div>
+        </div>
+        <div class="workflow-step" data-step="4">
+          <div class="step-number">4</div>
+          <div class="step-label">Body Groups</div>
+        </div>
+        <div class="workflow-step" data-step="5">
+          <div class="step-number">5</div>
+          <div class="step-label">Videos</div>
+        </div>
+        <div class="workflow-step" data-step="6">
+          <div class="step-number">6</div>
+          <div class="step-label">Summary</div>
+        </div>
+      </div>
+
       <form id="workoutForm">
-        <!-- Duration Settings -->
-        <div class="form-section">
-          <h3>⏱️ Duration Settings</h3>
-
-          <div class="form-group">
-            <label for="workDuration">Work Duration:</label>
-            <select id="workDuration" required>
-              <option value="">Select work duration</option>
-            </select>
-            <div class="error" id="workDurationError"></div>
+        <!-- Step 1: Duration Settings -->
+        <div class="workflow-step-content active" data-step="1">
+          <div class="step-header">
+            <h2>⏱️ Step 1: Duration Settings</h2>
+            <p>Configure your workout timing parameters</p>
           </div>
 
-          <div class="form-group">
-            <label for="restDuration">Rest Duration:</label>
-            <select id="restDuration" required>
-              <option value="">Select rest duration</option>
-            </select>
-            <div class="error" id="restDurationError"></div>
-          </div>
-
-          <div class="form-group">
-            <label for="setsPerStation">Number of Sets:</label>
-            <select id="setsPerStation" required>
-              <option value="">Select number of sets</option>
-            </select>
-            <div class="error" id="setsPerStationError"></div>
-          </div>
-
-          <div class="form-group">
-            <label for="stationRest">Station Rest:</label>
-            <select id="stationRest" required>
-              <option value="">Select station rest</option>
-            </select>
-            <div class="error" id="stationRestError"></div>
-          </div>
-
-          <div class="form-group">
-            <label for="totalWorkoutDuration">Total Workout Duration:</label>
-            <select id="totalWorkoutDuration" required>
-              <option value="">Select total workout duration</option>
-            </select>
-            <div class="error" id="totalWorkoutDurationError"></div>
-          </div>
-        </div>
-
-        <!-- Exercise Categories -->
-        <div class="form-section">
-          <h3>📂 Exercise Categories</h3>
-          <div id="categoriesContainer">
-            <div class="loading">Loading categories...</div>
-          </div>
-          <div class="error" id="categoriesError"></div>
-        </div>
-
-        <!-- Equipment -->
-        <div class="form-section">
-          <h3>🏋️ Equipment</h3>
-          <div id="equipmentContainer">
-            <div class="loading">Loading equipment...</div>
-          </div>
-          <div class="error" id="equipmentError"></div>
-        </div>
-
-        <!-- Output Folder Selection -->
-        <div class="form-section">
-          <h3>📁 Output Folder</h3>
-          <div class="form-group">
-            <label for="outputFolder">Save video to:</label>
-            <div class="folder-input-container">
-              <input
-                type="text"
-                id="outputFolder"
-                class="folder-input"
-                readonly
-                placeholder="Click 'Choose Folder' to select where to save the video"
-              />
-              <button
-                type="button"
-                id="selectFolderBtn"
-                class="submit-btn folder-button"
-              >
-                📂 Choose Folder
-              </button>
+          <div class="form-section">
+            <div class="form-group">
+              <label for="workDuration">Work Duration:</label>
+              <select id="workDuration" required>
+                <option value="">Select work duration</option>
+              </select>
+              <div class="error" id="workDurationError"></div>
             </div>
-            <div class="error" id="outputFolderError"></div>
-            <small class="folder-help-text">
-              Please select a folder to save your workout video
-            </small>
+
+            <div class="form-group">
+              <label for="restDuration">Rest Duration:</label>
+              <select id="restDuration" required>
+                <option value="">Select rest duration</option>
+              </select>
+              <div class="error" id="restDurationError"></div>
+            </div>
+
+            <div class="form-group">
+              <label for="setsPerStation">Number of Sets:</label>
+              <select id="setsPerStation" required>
+                <option value="">Select number of sets</option>
+              </select>
+              <div class="error" id="setsPerStationError"></div>
+            </div>
+
+            <div class="form-group">
+              <label for="stationRest">Station Rest:</label>
+              <select id="stationRest" required>
+                <option value="">Select station rest</option>
+              </select>
+              <div class="error" id="stationRestError"></div>
+            </div>
+
+            <div class="form-group">
+              <label for="totalWorkoutDuration">Total Workout Duration:</label>
+              <select id="totalWorkoutDuration" required>
+                <option value="">Select total workout duration</option>
+              </select>
+              <div class="error" id="totalWorkoutDurationError"></div>
+            </div>
+          </div>
+
+          <div class="workflow-navigation">
+            <button type="button" class="next-btn">
+              Next: Exercise Categories →
+            </button>
           </div>
         </div>
 
-        <button type="submit" class="submit-btn" id="submitBtn">
-          🎬 Generate Workout Video
-        </button>
-        <!-- <button type="button" class="submit-btn" id="debugBtn" style="margin-left: 10px; background-color: #6c757d;">
-        🔧 Debug FFmpeg
-      </button> -->
+        <!-- Step 2: Exercise Categories -->
+        <div class="workflow-step-content" data-step="2">
+          <div class="step-header">
+            <h2>📂 Step 2: Exercise Categories</h2>
+            <p>Select the types of exercises you want in your workout</p>
+          </div>
+
+          <div class="form-section">
+            <div id="categoriesContainer">
+              <div class="loading">Loading categories...</div>
+            </div>
+            <div class="error" id="categoriesError"></div>
+          </div>
+
+          <div class="workflow-navigation">
+            <button type="button" class="back-btn">
+              ← Back: Duration Settings
+            </button>
+            <button type="button" class="next-btn">Next: Equipment →</button>
+          </div>
+        </div>
+
+        <!-- Step 3: Equipment -->
+        <div class="workflow-step-content" data-step="3">
+          <div class="step-header">
+            <h2>🏋️ Step 3: Equipment</h2>
+            <p>Choose the equipment you have available</p>
+          </div>
+
+          <div class="form-section">
+            <div id="equipmentContainer">
+              <div class="loading">Loading equipment...</div>
+            </div>
+            <div class="error" id="equipmentError"></div>
+          </div>
+
+          <div class="workflow-navigation">
+            <button type="button" class="back-btn">
+              ← Back: Exercise Categories
+            </button>
+            <button type="button" class="next-btn">Next: Body Groups →</button>
+          </div>
+        </div>
+
+        <!-- Step 4: Body Groups -->
+        <div class="workflow-step-content" data-step="4">
+          <div class="step-header">
+            <h2>🧍 Step 4: Body Groups</h2>
+            <p>Select which body parts to focus on</p>
+          </div>
+
+          <div class="form-section">
+            <div id="bodyGroupContainer">
+              <div class="loading">
+                Select equipment first to load body groups
+              </div>
+            </div>
+            <div class="error" id="bodyGroupError"></div>
+          </div>
+
+          <div class="workflow-navigation">
+            <button type="button" class="back-btn">← Back: Equipment</button>
+            <button type="button" class="next-btn">
+              Next: Video Selection →
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 5: Video Selection -->
+        <div class="workflow-step-content" data-step="5">
+          <div class="step-header">
+            <h2>🎬 Step 5: Exercise Video Selection</h2>
+            <p>Choose specific exercises for your workout</p>
+          </div>
+
+          <div class="form-section">
+            <div class="video-selection-header">
+              <div class="video-selection-info">
+                <span id="videoSelectionCount">0 out of 0 selected</span>
+                <span id="videoSelectionLimit" class="video-limit-info"></span>
+              </div>
+              <div class="video-selection-controls">
+                <button type="button" id="selectAllBtn" class="secondary-btn">
+                  Select All
+                </button>
+                <button type="button" id="deselectAllBtn" class="secondary-btn">
+                  Deselect All
+                </button>
+                <button
+                  type="button"
+                  id="randomSelectBtn"
+                  class="secondary-btn"
+                >
+                  Random Select
+                </button>
+              </div>
+            </div>
+            <div id="videoSelectionContainer">
+              <div class="loading">Loading available videos...</div>
+            </div>
+            <div class="error" id="videoSelectionError"></div>
+          </div>
+
+          <div class="workflow-navigation">
+            <button type="button" class="back-btn">← Back: Body Groups</button>
+            <button type="button" class="next-btn">Next: Summary →</button>
+          </div>
+        </div>
+
+        <!-- Step 6: Final Summary -->
+        <div class="workflow-step-content" data-step="6">
+          <div class="step-header">
+            <h2>📋 Step 6: Final Summary</h2>
+            <p>Review your workout configuration and generate the video</p>
+          </div>
+
+          <div class="form-section">
+            <div class="summary-section">
+              <h3>Workout Summary</h3>
+              <div id="finalSummary">
+                <div class="loading">Loading summary...</div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3>📁 Output Folder</h3>
+              <div class="form-group">
+                <label for="outputFolder">Save video to:</label>
+                <div class="folder-input-container">
+                  <input
+                    type="text"
+                    id="outputFolder"
+                    class="folder-input"
+                    readonly
+                    placeholder="Click 'Choose Folder' to select where to save the video"
+                  />
+                  <button
+                    type="button"
+                    id="selectFolderBtn"
+                    class="submit-btn folder-button"
+                  >
+                    📂 Choose Folder
+                  </button>
+                </div>
+                <div class="error" id="outputFolderError"></div>
+                <small class="folder-help-text">
+                  Please select a folder to save your workout video
+                </small>
+              </div>
+            </div>
+          </div>
+
+          <div class="workflow-navigation">
+            <button type="button" class="back-btn">
+              ← Back: Video Selection
+            </button>
+            <button type="submit" class="submit-btn" id="submitBtn">
+              🎬 Generate
+            </button>
+          </div>
+        </div>
       </form>
 
       <!-- Progress Container -->
@@ -233,7 +381,9 @@
           <div class="update-progress-bar">
             <div class="update-progress-fill" id="updateProgressFill"></div>
           </div>
-          <div class="update-message" id="updateMessage">Starting download...</div>
+          <div class="update-message" id="updateMessage">
+            Starting download...
+          </div>
         </div>
       </div>
     </div>

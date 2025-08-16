@@ -679,6 +679,138 @@
         z-index: 10;
         box-shadow: 0 0 40px rgba(0, 0, 0, 0.3);
       }
+
+      /* Carousel Styles */
+      .carousel-wrapper {
+        position: relative;
+        max-width: 900px;
+        margin: 0 auto;
+      }
+
+      .carousel-container {
+        position: relative;
+        max-width: 800px;
+        margin: 0 auto;
+      }
+
+      .carousel {
+        position: relative;
+        width: 100%;
+        height: 0;
+        padding-bottom: 81.06%; /* 1686/2080 * 100 = 81.06% for aspect ratio */
+      }
+
+      .carousel-slide {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        transition: opacity 0.5s ease-in-out;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 16px;
+        overflow: hidden;
+      }
+
+      .slide-container {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .carousel-slide.active {
+        opacity: 1;
+      }
+
+      .carousel-slide img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+
+      .carousel-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: #ff6b6b;
+        color: white;
+        border: none;
+        padding: 16px 12px;
+        cursor: pointer;
+        font-size: 18px;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        z-index: 100;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      }
+
+      .carousel-btn:hover {
+        background: rgba(0, 0, 0, 0.9);
+        transform: translateY(-50%) scale(1.1);
+      }
+
+      .carousel-btn.prev {
+        left: 10px;
+      }
+
+      .carousel-btn.next {
+        right: 10px;
+      }
+
+      .carousel-dots {
+        position: relative;
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        margin-top: 40px;
+      }
+
+      .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.5);
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .dot.active,
+      .dot:hover {
+        background: #ff6b6b;
+        transform: scale(1.2);
+      }
+
+      @media (max-width: 768px) {
+        .carousel {
+          padding-bottom: 81.06%; /* Maintain same aspect ratio on mobile */
+        }
+
+        .carousel-btn {
+          width: 40px;
+          height: 40px;
+          font-size: 16px;
+          padding: 12px 8px;
+        }
+
+        .carousel-dots {
+          bottom: 15px;
+        }
+
+        .dot {
+          width: 10px;
+          height: 10px;
+        }
+      }
     </style>
   </head>
   <body>
@@ -878,10 +1010,83 @@
       <section class="screenshot">
         <div class="container">
           <h2 class="section-title">Simple & Intuitive Interface</h2>
-          <img
-            src="media/images/screenshot.png"
-            alt="Wurqit Application Interface"
-          />
+          <div class="carousel-wrapper">
+            <div class="carousel-container">
+              <div class="carousel">
+                <div class="carousel-slide active">
+                  <div class="slide-container">
+                    <img
+                      src="media/images/ui_slides/001.jpg"
+                      alt="Wurqit Application Interface - Duration Settings"
+                    />
+                  </div>
+                </div>
+                <div class="carousel-slide">
+                  <div class="slide-container">
+                    <img
+                      src="media/images/ui_slides/002.jpg"
+                      alt="Wurqit Application Interface - Exercise Categories"
+                    />
+                  </div>
+                </div>
+                <div class="carousel-slide">
+                  <div class="slide-container">
+                    <img
+                      src="media/images/ui_slides/003.jpg"
+                      alt="Wurqit Application Interface - Equipment"
+                    />
+                  </div>
+                </div>
+                <div class="carousel-slide">
+                  <div class="slide-container">
+                    <img
+                      src="media/images/ui_slides/004.jpg"
+                      alt="Wurqit Application Interface - Body Groups"
+                    />
+                  </div>
+                </div>
+                <div class="carousel-slide">
+                  <div class="slide-container">
+                    <img
+                      src="media/images/ui_slides/005.jpg"
+                      alt="Wurqit Application Interface - Exercise Video Selection"
+                    />
+                  </div>
+                </div>
+                <div class="carousel-slide">
+                  <div class="slide-container">
+                    <img
+                      src="media/images/ui_slides/006.jpg"
+                      alt="Wurqit Application Interface - Final Summary"
+                    />
+                  </div>
+                </div>
+                <div class="carousel-slide">
+                  <div class="slide-container">
+                    <img
+                      src="media/images/ui_slides/007.jpg"
+                      alt="Wurqit Application Interface - Video Generation Progress"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button class="carousel-btn prev" onclick="changeSlide(-1)">
+              &#10094;
+            </button>
+            <button class="carousel-btn next" onclick="changeSlide(1)">
+              &#10095;
+            </button>
+          </div>
+          <div class="carousel-dots">
+            <span class="dot active" onclick="goToSlide(1)"></span>
+            <span class="dot" onclick="goToSlide(2)"></span>
+            <span class="dot" onclick="goToSlide(3)"></span>
+            <span class="dot" onclick="goToSlide(4)"></span>
+            <span class="dot" onclick="goToSlide(5)"></span>
+            <span class="dot" onclick="goToSlide(6)"></span>
+            <span class="dot" onclick="goToSlide(7)"></span>
+          </div>
         </div>
       </section>
 
@@ -998,7 +1203,13 @@
         "media/images/workout-screenshot-03.png",
         "media/images/workout-screenshot-04.png",
         "media/images/workout-screenshot-05.png",
-        "media/images/screenshot.png",
+        "media/images/ui_slides/001.jpg",
+        "media/images/ui_slides/002.jpg",
+        "media/images/ui_slides/003.jpg",
+        "media/images/ui_slides/004.jpg",
+        "media/images/ui_slides/005.jpg",
+        "media/images/ui_slides/006.jpg",
+        "media/images/ui_slides/007.jpg",
         "media/images/macos.svg",
         "media/images/windows.svg",
       ];
@@ -1147,6 +1358,93 @@
 
       // Initial call
       updateCardFan();
+
+      // Carousel functionality
+      let currentSlide = 1;
+      const totalSlides = 7;
+      let autoSlideInterval;
+      let userInteracted = false;
+
+      function showSlide(n) {
+        const slides = document.querySelectorAll(".carousel-slide");
+        const dots = document.querySelectorAll(".dot");
+
+        // Update current slide
+        currentSlide = n;
+
+        // Handle wrapping
+        if (currentSlide > totalSlides) currentSlide = 1;
+        if (currentSlide < 1) currentSlide = totalSlides;
+
+        // Hide all slides
+        slides.forEach((slide) => slide.classList.remove("active"));
+        dots.forEach((dot) => dot.classList.remove("active"));
+
+        // Show current slide
+        slides[currentSlide - 1].classList.add("active");
+        dots[currentSlide - 1].classList.add("active");
+      }
+
+      function changeSlide(direction) {
+        if (!userInteracted) {
+          userInteracted = true;
+          clearInterval(autoSlideInterval);
+        }
+        showSlide(currentSlide + direction);
+      }
+
+      function goToSlide(n) {
+        if (!userInteracted) {
+          userInteracted = true;
+          clearInterval(autoSlideInterval);
+        }
+        currentSlide = n;
+        showSlide(currentSlide);
+      }
+
+      function autoAdvance() {
+        showSlide(currentSlide + 1);
+      }
+
+      function startAutoSlide() {
+        if (!userInteracted) {
+          autoSlideInterval = setInterval(autoAdvance, 5000);
+        }
+      }
+
+      function stopAutoSlide() {
+        if (autoSlideInterval) {
+          clearInterval(autoSlideInterval);
+          autoSlideInterval = null;
+        }
+      }
+
+      // Intersection Observer for carousel visibility
+      const carouselObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              // Carousel is visible, start auto-slide
+              startAutoSlide();
+            } else {
+              // Carousel is not visible, stop auto-slide
+              stopAutoSlide();
+            }
+          });
+        },
+        {
+          threshold: 0.3, // Start when 30% of carousel is visible
+        }
+      );
+
+      // Observe the carousel wrapper
+      const carouselWrapper = document.querySelector(".carousel-wrapper");
+      if (carouselWrapper) {
+        carouselObserver.observe(carouselWrapper);
+      }
+
+      // Initialize carousel
+      showSlide(1);
     </script>
   </body>
 </html>
