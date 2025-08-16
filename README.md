@@ -24,7 +24,13 @@ No subscriptions. No setup. No internet required. Just launch the app and start 
 
 # Easy to use UI
 
-![User interface](media/images/screenshot.png)
+![Slide 1](docs/media/images/ui_slides/001.jpg)
+![Slide 2](docs/media/images/ui_slides/002.jpg)
+![Slide 3](docs/media/images/ui_slides/003.jpg)
+![Slide 4](docs/media/images/ui_slides/004.jpg)
+![Slide 5](docs/media/images/ui_slides/005.jpg)
+![Slide 6](docs/media/images/ui_slides/006.jpg)
+![Slide 7](docs/media/images/ui_slides/007.jpg)
 
 # Professional videos
 
