@@ -14,6 +14,9 @@ import {
   getEquipment,
   generateWorkoutVideo,
   getFfmpegPath,
+  getAvailableVideos,
+  // new
+  getVideosDir,
 } from "./generator";
 import { checkForUpdates, setMainWindow } from "./update";
 import isDev from "electron-is-dev";
@@ -115,7 +118,7 @@ function setupMenus() {
             try {
               await checkForUpdates();
             } catch (error) {
-              console.error('Manual update check failed:', error);
+              console.error("Manual update check failed:", error);
             }
           },
         },
@@ -190,11 +193,11 @@ function createWindow() {
     setTimeout(() => {
       splash.close();
       mainWindow.show();
-      
+
       // Check for updates after a short delay to not interfere with app startup
       setTimeout(() => {
-        checkForUpdates().catch(error => {
-          console.error('Update check failed:', error);
+        checkForUpdates().catch((error) => {
+          console.error("Update check failed:", error);
         });
       }, 1000);
     }, 5000);
@@ -220,6 +223,21 @@ ipcMain.handle("get-equipment", async (event, categories: string[]) => {
     throw new Error(`Failed to get equipment: ${(error as Error).message}`);
   }
 });
+
+// Handle getting body groups for selected categories and equipment
+ipcMain.handle(
+  "get-body-groups",
+  async (event, categories: string[], equipment: string[]) => {
+    try {
+      // To avoid a circular import, we expose getAvailableVideos with no filters to discover groups
+      // but better: rely on generator.getBodyGroups. We'll import lazily to keep top import tidy.
+      const { getBodyGroups } = require("./generator");
+      return getBodyGroups(categories, equipment);
+    } catch (error) {
+      throw new Error(`Failed to get body groups: ${(error as Error).message}`);
+    }
+  }
+);
 
 // Handle folder selection dialog
 ipcMain.handle("select-output-folder", async (event) => {
@@ -249,6 +267,8 @@ ipcMain.handle("generate-workout-video", async (event, formData: any) => {
       totalWorkoutDuration,
       categories,
       equipment,
+      bodyGroups,
+      selectedVideos,
       outputPath,
     } = formData;
 
@@ -270,7 +290,9 @@ ipcMain.handle("generate-workout-video", async (event, formData: any) => {
       totalWorkoutDuration,
       categories,
       equipment,
+      bodyGroups,
       outputPath,
+      selectedVideos,
       progressCallback,
       consoleCallback
     );
@@ -366,5 +388,24 @@ ipcMain.handle("run-ffmpeg", async () => {
     });
   });
 });
+
+// Handle getting available videos for selection
+ipcMain.handle(
+  "get-available-videos",
+  async (
+    event,
+    categories: string[],
+    equipment: string[],
+    bodyGroups?: string[]
+  ) => {
+    try {
+      return getAvailableVideos(categories, equipment, bodyGroups);
+    } catch (error) {
+      throw new Error(
+        `Failed to get available videos: ${(error as Error).message}`
+      );
+    }
+  }
+);
 
 app.whenReady().then(createWindow);

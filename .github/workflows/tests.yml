@@ -73,6 +73,6 @@ jobs:
         if: github.ref == 'refs/heads/main'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: .badge
-          destination_dir: badges
+          publish_branch: main
+          publish_dir: docs/.badge
+          destination_dir: docs/badges
