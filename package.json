@@ -2,6 +2,13 @@
   "name": "wurqit",
   "version": "1.0.7",
   "main": "src/main.js",
+  "homepage": "https://www.wurqit.com",
+  "email": "lwpearce@gmail.com",
+  "author": {
+    "email": "lwpearce@gmail.com",
+    "name": "Lachlan Pearce",
+    "url": "https://www.wurqit.com"
+  },
   "scripts": {
     "build:ts": "tsc",
     "build:ts:watch": "tsc --watch",
