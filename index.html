@@ -108,7 +108,6 @@
       <div class="app-header">
         <img src="icon.png" alt="WURQIT App Icon" class="app-icon" />
         <h1 class="app-title">WURQIT</h1>
-        <h1 id="download-counter">Loading downloads...</h1>
       </div>
 
       <!-- Workflow Progress Bar -->
@@ -390,21 +389,5 @@
     </div>
 
     <script src="src/script.js"></script>
-
-    <script type="module">
-      import { getTotalDownloadCount } from "./githubDownloads.js";
-
-      async function showDownloads() {
-        const total = await getTotalDownloadCount();
-        const el = document.getElementById("download-counter");
-        if (total > 0) {
-          el.textContent = `Join over ${total.toLocaleString()} other users already using Wurqit`;
-        } else {
-          el.textContent = "Download stats unavailable";
-        }
-      }
-
-      showDownloads();
-    </script>
   </body>
 </html>

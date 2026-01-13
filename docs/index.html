@@ -1093,6 +1093,7 @@
       <!-- Pricing -->
       <section id="download" class="pricing">
         <div class="container">
+          <h1 id="download-counter">Loading downloads...</h1>
           <h2 class="section-title">Get Started Today</h2>
           <div class="price-card">
             <div class="price">Free</div>
@@ -1445,6 +1446,21 @@
 
       // Initialize carousel
       showSlide(1);
+    </script>
+    <script type="module">
+      import { getTotalDownloadCount } from "./githubDownloads.js";
+
+      async function showDownloads() {
+        const total = await getTotalDownloadCount();
+        const el = document.getElementById("download-counter");
+        if (total > 0) {
+          el.textContent = `Join over ${total.toLocaleString()} other users already using Wurqit`;
+        } else {
+          el.textContent = "Download stats unavailable";
+        }
+      }
+
+      showDownloads();
     </script>
   </body>
 </html>
