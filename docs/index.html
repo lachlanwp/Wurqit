@@ -1454,7 +1454,7 @@
         const total = await getTotalDownloadCount();
         const el = document.getElementById("download-counter");
         if (total > 0) {
-          el.textContent = `Trusted by 183 ${total.toLocaleString()}+ users and growing`;
+          el.textContent = `Trusted by ${total.toLocaleString()}+ users and growing`;
         } else {
           el.textContent = "Download stats unavailable";
         }
