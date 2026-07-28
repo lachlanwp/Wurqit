@@ -1,0 +1,102 @@
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  transition:
+    background-color 0.2s,
+    transform 0.2s,
+    box-shadow 0.2s;
+  background-color: #fafafa;
+  gap: 10px;
+}
+
+.card:hover {
+  background-color: #f0f0f0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.checkbox {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  transform: scale(1.2);
+  z-index: 10;
+}
+
+.preview {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  background-color: #000;
+  cursor: pointer;
+  transition: transform 0.2s;
+  display: block;
+}
+
+.preview:hover {
+  transform: scale(1.02);
+}
+
+/* Shown when a clip cannot be decoded, so the grid keeps its rhythm. */
+.placeholder {
+  width: 100%;
+  height: 200px;
+  background-color: #f8f9fa;
+  border: 2px dashed #dee2e6;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 5px;
+}
+
+.name {
+  font-weight: bold;
+  color: #333;
+  font-size: 16px;
+  line-height: 1.3;
+  text-align: center;
+  margin-top: 5px;
+}
+
+.meta {
+  color: #666;
+  font-size: 12px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.tag {
+  color: white;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.category {
+  background-color: #007bff;
+}
+
+.equipment {
+  background-color: #28a745;
+}
+
+.bodyGroup {
+  background-color: #6f42c1;
+}

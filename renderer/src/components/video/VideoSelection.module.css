@@ -1,0 +1,46 @@
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 5px;
+  border: 1px solid #e9ecef;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.counts {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.count {
+  font-weight: bold;
+  color: #333;
+}
+
+.limit {
+  color: #666;
+  font-size: 12px;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+}
+
+.grid {
+  max-height: 600px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: white;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 15px;
+  max-width: 100%;
+}

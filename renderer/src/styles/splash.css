@@ -1,0 +1,29 @@
+body {
+  font-family: "Oswald", Arial, sans-serif;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background-image: url("../assets/background.png");
+  background-color: #1a1a1a;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  min-height: 100vh;
+  user-select: none;
+  -webkit-user-select: none;
+  overflow: hidden;
+}
+
+.splash {
+  display: flex;
+  flex: 1;
+  height: 100vh;
+  justify-content: center;
+  align-items: center;
+}
+
+.splash-icon {
+  width: 200px;
+  height: 200px;
+}

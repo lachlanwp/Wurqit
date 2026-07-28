@@ -1,0 +1,68 @@
+.content {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.header h2 {
+  margin: 0 0 10px 0;
+  font-size: 1.8em;
+  font-weight: bold;
+}
+
+.header p {
+  margin: 0;
+  font-size: 1.1em;
+  opacity: 0.9;
+}
+
+.navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 30px;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  border: 1px solid #dee2e6;
+}
+
+/* Keeps the forward action right-aligned on the first step, which has no
+   back button to balance it. */
+.navigation > :only-child {
+  margin-left: auto;
+}
+
+@media (max-width: 768px) {
+  .navigation {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .navigation > * {
+    width: 100%;
+  }
+
+  .navigation > :only-child {
+    margin-left: 0;
+  }
+}

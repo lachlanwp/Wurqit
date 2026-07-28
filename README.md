@@ -75,12 +75,20 @@ You will need the following installed on your dev system
         - images    | contains images for the app
     - tests         | contains tests for the main app code
     - .env          | the environment variables used for builds
-    - src/
-        - generator.ts  | the main TypeScript for generating the videos
-        - main.ts       | the entry point of the app
-        - preload.ts    | used to preload all the IPC code
-        - script.ts     | the UI logic of the app
-    - index.html    | the UI of the app
+    - src/              | Electron main process (compiled by tsc)
+        - generator.ts      | the main TypeScript for generating the videos
+        - main.ts           | the entry point of the app
+        - preload.ts        | used to preload all the IPC code
+        - media-protocol.ts | streams exercise clips to the renderer
+        - shared/ipc.ts     | IPC contract shared with the renderer
+    - renderer/         | React UI (bundled by Vite)
+        - index.html        | renderer entry document
+        - splash.html       | splash window shown while the app boots
+        - src/
+            - stores/       | MobX state (wizard, workout, generation, update)
+            - components/   | reusable UI, one CSS module each
+            - steps/        | the six wizard screens
+    - scripts/dev.mjs   | starts the Vite dev server, then Electron
     - notarize.js   | used to notarize the app for release
     - package.json  | npm packages file, contains build config too
 ```
@@ -93,8 +101,22 @@ Run the following commands
 yarn install
 ```
 
+Development, with hot module replacement in the renderer:
+
+```bash
+yarn dev
+```
+
+Or run the production bundle exactly as the packaged app loads it:
+
 ```bash
 yarn start
+```
+
+Type-check the renderer without emitting:
+
+```bash
+yarn typecheck
 ```
 
 ## Testing
