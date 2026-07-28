@@ -1,0 +1,24 @@
+.field {
+  margin-bottom: 15px;
+}
+
+.section {
+  margin-bottom: 25px;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #fafafa;
+}
+
+.section h3 {
+  margin-top: 0;
+  color: #555;
+  border-bottom: 2px solid #007bff;
+  padding-bottom: 5px;
+}
+
+/* Dimmed while generation is in flight so the form reads as locked. */
+.sectionDisabled {
+  opacity: 0.6;
+  pointer-events: none;
+}

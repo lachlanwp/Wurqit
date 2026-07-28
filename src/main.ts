@@ -7,7 +7,6 @@ import {
   nativeImage,
 } from "electron";
 import path from "path";
-import { spawn } from "child_process";
 import fs from "fs";
 import {
   getCategories,
@@ -15,15 +14,23 @@ import {
   generateWorkoutVideo,
   getFfmpegPath,
   getAvailableVideos,
-  // new
-  getVideosDir,
 } from "./generator";
 import { checkForUpdates, setMainWindow } from "./update";
+import { handleMediaRequests, registerMediaScheme } from "./media-protocol";
 import isDev from "electron-is-dev";
 import * as remoteElectron from "@electron/remote/main";
 let mainWindow;
 
 remoteElectron.initialize();
+
+/**
+ * Set by the dev script when it starts the Vite server. When absent the
+ * renderer is loaded from the production bundle instead.
+ */
+const devServerUrl = process.env.VITE_DEV_SERVER_URL;
+
+// Privileged schemes have to be declared before the app is ready.
+registerMediaScheme();
 
 // Add crash prevention and memory management
 app.commandLine.appendSwitch("--max-old-space-size", "4096");
@@ -166,7 +173,12 @@ function createMainWindow(andShow: boolean = false): void {
 
   setupMenus();
 
-  mainWindow.loadFile("index.html");
+  if (devServerUrl) {
+    mainWindow.loadURL(devServerUrl);
+    mainWindow.webContents.openDevTools({ mode: "detach" });
+  } else {
+    mainWindow.loadFile(path.join(__dirname, "..", "dist/renderer/index.html"));
+  }
 
   if (andShow) {
     mainWindow.show();
@@ -186,7 +198,11 @@ function createWindow() {
 
   remoteElectron.enable(splash.webContents);
 
-  splash.loadFile("splash.html");
+  if (devServerUrl) {
+    splash.loadURL(new URL("splash.html", devServerUrl).toString());
+  } else {
+    splash.loadFile(path.join(__dirname, "..", "dist/renderer/splash.html"));
+  }
 
   // if main window is ready to show, then destroy the splash window and show up the main window
   mainWindow.once("ready-to-show", () => {
@@ -367,28 +383,6 @@ ipcMain.handle("debug-ffmpeg", async () => {
   }
 });
 
-// Example: Listen for FFmpeg command from renderer (legacy)
-ipcMain.handle("run-ffmpeg", async () => {
-  return new Promise<string>((resolve, reject) => {
-    const ffmpegPath = getFfmpegPath();
-    const ffmpeg = spawn(ffmpegPath, [
-      "-version", // change this to your desired command
-    ]);
-
-    let output = "";
-    ffmpeg.stdout.on("data", (data: Buffer) => (output += data));
-    ffmpeg.stderr.on("data", (data: Buffer) => (output += data));
-
-    ffmpeg.on("close", (code: number) => {
-      resolve(output);
-    });
-
-    ffmpeg.on("error", (err: Error) => {
-      reject(err);
-    });
-  });
-});
-
 // Handle getting available videos for selection
 ipcMain.handle(
   "get-available-videos",
@@ -408,4 +402,7 @@ ipcMain.handle(
   }
 );
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  handleMediaRequests();
+  createWindow();
+});

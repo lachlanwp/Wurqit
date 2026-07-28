@@ -1,0 +1,96 @@
+.button {
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Primary — the forward action on a step. */
+.primary {
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 14px;
+  background-color: #007bff;
+  color: white;
+}
+
+.primary:hover:not(:disabled) {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+}
+
+.primary:disabled {
+  background-color: #dee2e6;
+  color: #6c757d;
+}
+
+/* Back — the reverse action, deliberately quieter than primary. */
+.back {
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 14px;
+  background-color: #6c757d;
+  color: white;
+}
+
+.back:hover:not(:disabled) {
+  background-color: #5a6268;
+  transform: translateY(-1px);
+}
+
+.back:disabled {
+  background-color: #dee2e6;
+  color: #6c757d;
+}
+
+/* Secondary — inline tools such as the video bulk-selection controls. */
+.secondary {
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: #6c757d;
+  color: white;
+  transition: background-color 0.3s;
+}
+
+.secondary:hover:not(:disabled) {
+  background-color: #5a6268;
+}
+
+.secondary:disabled {
+  background-color: #adb5bd;
+}
+
+/* Submit — the one terminal action in the wizard. */
+.submit {
+  padding: 12px 30px;
+  border-radius: 5px;
+  font-size: 16px;
+  background-color: #007bff;
+  color: white;
+}
+
+.submit:hover:not(:disabled) {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+}
+
+.submit:disabled {
+  background-color: #dee2e6;
+  color: #6c757d;
+}
+
+.block {
+  width: 100%;
+}

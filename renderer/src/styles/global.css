@@ -1,0 +1,45 @@
+/*
+ * Only genuinely global concerns live here: the typeface, the page chrome and
+ * bare element defaults. Everything else is scoped to its component through a
+ * CSS module.
+ */
+
+@font-face {
+  font-family: "Oswald";
+  src: url("../assets/Oswald.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+body {
+  font-family: "Oswald", Arial, sans-serif;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background-image: url("../assets/background.png");
+  background-color: #1a1a1a;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  min-height: 100vh;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #333;
+}
+
+select,
+input[type="number"] {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+}

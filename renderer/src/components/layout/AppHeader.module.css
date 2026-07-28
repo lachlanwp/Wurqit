@@ -1,0 +1,20 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 30px;
+  gap: 15px;
+}
+
+.icon {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+.title {
+  font-size: 2.5em;
+  font-weight: bold;
+  color: #333;
+  margin: 0;
+}

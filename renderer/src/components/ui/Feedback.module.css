@@ -1,0 +1,18 @@
+.error {
+  color: #dc3545;
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+.loading {
+  text-align: center;
+  color: #007bff;
+  font-style: italic;
+}
+
+.empty {
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+  padding: 10px 0;
+}

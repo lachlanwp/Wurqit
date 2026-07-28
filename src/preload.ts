@@ -1,65 +1,45 @@
-import { contextBridge, ipcRenderer } from "electron";
+import { contextBridge, ipcRenderer, IpcRendererEvent } from "electron";
+import type {
+  ConsoleLogMessage,
+  ExerciseVideo,
+  FfmpegDebugInfo,
+  GenerateWorkoutRequest,
+  PersistedSettings,
+  ProgressUpdate,
+  Unsubscribe,
+  WurqitAPI,
+} from "./shared/ipc";
 
-// Define the API interface for type safety
-interface WurqitAPI {
-  getCategories: () => Promise<string[]>;
-  getEquipment: (categories: string[]) => Promise<string[]>;
-  getBodyGroups: (
-    categories: string[],
-    equipment: string[]
-  ) => Promise<string[]>;
-  getAvailableVideos: (
-    categories: string[],
-    equipment: string[],
-    bodyGroups?: string[]
-  ) => Promise<
-    Array<{
-      path: string;
-      category: string;
-      equipment: string;
-      bodyGroup?: string;
-      exerciseName: string;
-      filename: string;
-    }>
-  >;
-  selectOutputFolder: () => Promise<string | null>;
-  generateWorkoutVideo: (formData: any) => Promise<string>;
-  onGenerationProgress: (
-    callback: (data: { progress: number; message: string }) => void
-  ) => void;
-  removeGenerationProgress: () => void;
-  onConsoleLog: (
-    callback: (data: { level: string; message: string }) => void
-  ) => void;
-  removeConsoleLog: () => void;
-  loadSettings: () => Promise<any>;
-  saveSettings: (settings: any) => Promise<boolean>;
-  debugFfmpeg: () => Promise<any>;
-  run: () => Promise<string>;
-  onUpdateProgress: (
-    callback: (data: { progress: number; message: string }) => void
-  ) => void;
-  removeUpdateProgress: () => void;
+/**
+ * Wraps an ipcRenderer channel in a subscribe/dispose pair. Returning a
+ * disposer keeps ownership with the caller, so a React effect unmounting does
+ * not silently kill another component's listener on the same channel.
+ */
+function subscribe<T>(
+  channel: string,
+  callback: (data: T) => void
+): Unsubscribe {
+  const listener = (_event: IpcRendererEvent, data: T) => callback(data);
+  ipcRenderer.on(channel, listener);
+  return () => {
+    ipcRenderer.removeListener(channel, listener);
+  };
 }
 
-contextBridge.exposeInMainWorld("api", {
-  // Get categories from the videos directory
+const api: WurqitAPI = {
   getCategories: () => ipcRenderer.invoke("get-categories"),
 
-  // Get equipment for selected categories
   getEquipment: (categories: string[]) =>
     ipcRenderer.invoke("get-equipment", categories),
 
-  // Get body groups for selected categories + equipment
   getBodyGroups: (categories: string[], equipment: string[]) =>
     ipcRenderer.invoke("get-body-groups", categories, equipment),
 
-  // Get available videos for selection
   getAvailableVideos: (
     categories: string[],
     equipment: string[],
     bodyGroups?: string[]
-  ) =>
+  ): Promise<ExerciseVideo[]> =>
     ipcRenderer.invoke(
       "get-available-videos",
       categories,
@@ -67,66 +47,28 @@ contextBridge.exposeInMainWorld("api", {
       bodyGroups
     ),
 
-  // Select output folder
   selectOutputFolder: () => ipcRenderer.invoke("select-output-folder"),
 
-  // Generate workout video
-  generateWorkoutVideo: (formData: any) =>
-    ipcRenderer.invoke("generate-workout-video", formData),
+  generateWorkoutVideo: (request: GenerateWorkoutRequest) =>
+    ipcRenderer.invoke("generate-workout-video", request),
 
-  // Listen for generation progress updates
-  onGenerationProgress: (
-    callback: (data: { progress: number; message: string }) => void
-  ) => {
-    ipcRenderer.on("generation-progress", (event, data) => callback(data));
-  },
+  loadSettings: (): Promise<PersistedSettings | null> =>
+    ipcRenderer.invoke("load-settings"),
 
-  // Remove progress listener
-  removeGenerationProgress: () => {
-    ipcRenderer.removeAllListeners("generation-progress");
-  },
-
-  // Listen for console log messages
-  onConsoleLog: (
-    callback: (data: { level: string; message: string }) => void
-  ) => {
-    ipcRenderer.on("console-log", (event, data) => callback(data));
-  },
-
-  // Remove console log listener
-  removeConsoleLog: () => {
-    ipcRenderer.removeAllListeners("console-log");
-  },
-
-  // Load saved settings
-  loadSettings: () => ipcRenderer.invoke("load-settings"),
-
-  // Save settings
-  saveSettings: (settings: any) =>
+  saveSettings: (settings: PersistedSettings) =>
     ipcRenderer.invoke("save-settings", settings),
 
-  // Debug FFmpeg installation
-  debugFfmpeg: () => ipcRenderer.invoke("debug-ffmpeg"),
+  debugFfmpeg: (): Promise<FfmpegDebugInfo> =>
+    ipcRenderer.invoke("debug-ffmpeg"),
 
-  // Legacy ffmpeg function (keeping for compatibility)
-  run: () => ipcRenderer.invoke("run-ffmpeg"),
+  onGenerationProgress: (cb: (data: ProgressUpdate) => void) =>
+    subscribe("generation-progress", cb),
 
-  // Listen for update progress updates
-  onUpdateProgress: (
-    callback: (data: { progress: number; message: string }) => void
-  ) => {
-    ipcRenderer.on("update-progress", (event, data) => callback(data));
-  },
+  onConsoleLog: (cb: (data: ConsoleLogMessage) => void) =>
+    subscribe("console-log", cb),
 
-  // Remove update progress listener
-  removeUpdateProgress: () => {
-    ipcRenderer.removeAllListeners("update-progress");
-  },
-} as WurqitAPI);
+  onUpdateProgress: (cb: (data: ProgressUpdate) => void) =>
+    subscribe("update-progress", cb),
+};
 
-// Extend the global Window interface to include our API
-declare global {
-  interface Window {
-    api: WurqitAPI;
-  }
-}
+contextBridge.exposeInMainWorld("api", api);
